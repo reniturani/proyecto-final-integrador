@@ -1,35 +1,58 @@
 const Profesor = require('../models/profesores.js');
 const Materia = require('../models/materia.js');
 const bcrypt = require('bcrypt');
+const { Op } = require('sequelize'); 
 
-// GET: obtener todos los profesores
+// GET: obtener todos los profesores (con paginacion, busqueda por nombre, filtrado por modalidad y materia, y ordenamiento)
 const obtenerProfesores = async (req, res) => {
     try {
-        // obtenemos la modalidad y/o materia de la consulta si es que se enviaron
-        const { modalidad, materia } = req.query; 
+        // extraigo los parametros de la url. les di valores por defecto si no vienen
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const sortBy = req.query.sortBy || 'id_profesor'; // ordena por ID por defecto
+        const order = req.query.order || 'ASC';
+        
+        const { modalidad, materia, nombre } = req.query; 
 
-        // validar que los filtros no estén vacíos
-        if (modalidad !== undefined && !modalidad.trim()) {
-            return res.status(400).json({ mensaje: 'La modalidad no puede estar vacía' });
+        // calcula cuantos registros saltearse segun la pagina
+        const offset = (page - 1) * limit;
+
+        let whereCondition = {};
+        
+        // validar y aplicar filtro de modalidad
+        if (modalidad !== undefined) {
+            if (!modalidad.trim()) {
+                return res.status(400).json({ mensaje: 'La modalidad no puede estar vacía' });
+            }
+            if (!await Profesor.findOne({ where: { modalidad } })) {
+                return res.status(404).json({ mensaje: 'La modalidad no existe' });
+            }
+            whereCondition.modalidad = modalidad;
         }
 
-        if (materia !== undefined && !materia.trim()) {
-            return res.status(400).json({ mensaje: 'La materia no puede estar vacía' });
+        // busqueda por nombre 
+        if (nombre) {
+            whereCondition.nombre = {
+                [Op.like]: `%${nombre}%` 
+            };
         }
 
-        // validar que existan
-        if (modalidad && !await Profesor.findOne({ where: { modalidad } })) {
-            return res.status(404).json({ mensaje: 'La modalidad no existe' });
+        // validamos que la materia exista si la enviaron
+        if (materia !== undefined) {
+            if (!materia.trim()) {
+                return res.status(400).json({ mensaje: 'La materia no puede estar vacía' });
+            }
+            if (!await Materia.findOne({ where: { nombre: materia } })) {
+                return res.status(404).json({ mensaje: 'La materia no existe' });
+            }
         }
 
-        if (materia && !await Materia.findOne({ where: { nombre: materia } })) {
-            return res.status(404).json({ mensaje: 'La materia no existe' });
-        }
-
-
-        const profesores = await Profesor.findAll({
-            // filtramos por modalidad y/o materia si se enviaron esos filtros, si no, devolvemos todos los profesores
-            where: modalidad ? { modalidad } : {},
+        // ejecuta la consulta con findAndCountAll (trae los datos y el total de registros)
+        const { count, rows } = await Profesor.findAndCountAll({
+            where: whereCondition,
+            limit: limit,
+            offset: offset,
+            order: [[sortBy, order.toUpperCase()]], // ordenamiento
             attributes: { exclude: ['password'] },
             include: materia ? [{
                 model: Materia,
@@ -37,14 +60,21 @@ const obtenerProfesores = async (req, res) => {
             }] : []
         });
 
-        // los filtros existen, pero no hay profesores que coincidan
-        if ((modalidad || materia) && profesores.length === 0) {
+        // si no hay resultados
+        if (rows.length === 0) {
             return res.status(404).json({
                 mensaje: 'No se encontraron profesores para los filtros indicados'
             });
         }
 
-        res.status(200).json(profesores);
+        // respuesta con la estructura paginada
+        res.status(200).json({
+            totalRegistros: count,
+            totalPaginas: Math.ceil(count / limit),
+            paginaActual: page,
+            profesores: rows
+        });
+
     } catch (error) {
         console.error('Error al obtener profesores:', error);
         res.status(500).json({ mensaje: 'Error interno al cargar la lista' });
