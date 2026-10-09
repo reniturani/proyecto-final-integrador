@@ -214,3 +214,35 @@ const actualizarEstudiante = async (req, res) => {
         });
     }
 };
+
+// DELETE eliminar un estudiante existente
+const eliminarEstudiante = async (req, res) => {
+    try {
+        const estudiante = await Estudiante.findByPk(req.params.id);
+
+        if (!estudiante) {
+            return res.status(404).json({
+                mensaje: 'Estudiante no encontrado'
+            });
+        }
+
+        await estudiante.destroy();
+
+        res.status(200).json({
+            mensaje: 'Estudiante eliminado correctamente'
+        });
+    } catch (error) {
+        console.error('Error al eliminar estudiante:', error);
+        res.status(500).json({
+            mensaje: 'Error interno al eliminar estudiante'
+        });
+    }
+};
+
+module.exports = {
+    obtenerEstudiantes,
+    obtenerEstudiantePorId,
+    crearEstudiante,
+    actualizarEstudiante,
+    eliminarEstudiante
+};
