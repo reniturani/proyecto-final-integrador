@@ -1,7 +1,8 @@
 const Materia = require("../models/materia.js");
 const { Op } = require("sequelize");
 
-// GET: obtener todas las materias (con paginacion, busqueda por nombre o descripcion, y ordenamiento)
+// GET: obtener todas las materias 
+// con paginacion, busqueda por nombre o descripcion, y ordenamiento
 const obtenerMaterias = async (req, res) => {
     try {
         // obtenemos la página y la cantidad de resultados
