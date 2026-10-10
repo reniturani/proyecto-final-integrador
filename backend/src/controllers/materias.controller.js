@@ -1,15 +1,71 @@
 const Materia = require("../models/materia.js");
+const { Op } = require("sequelize");
 
-// GET: obtener todas las materias
+// GET: obtener todas las materias (con paginacion, busqueda por nombre o descripcion, y ordenamiento)
 const obtenerMaterias = async (req, res) => {
     try {
-    const materias = await Materia.findAll();
-    res.status(200).json(materias);
+        // obtenemos la página y la cantidad de resultados
+        const pagina = Math.max(1, parseInt(req.query.pagina) || 1);
+        const limite = Math.min(
+            100,
+            Math.max(1, parseInt(req.query.limite) || 10)
+        );
+
+        // obtenemos el texto que se quiere buscar
+        const buscar = req.query.buscar?.trim() || '';
+
+        // definimos los campos permitidos para ordenar
+        const camposOrden = [
+            'id_materia',
+            'nombre',
+            'descripcion'
+        ];
+
+        const orden = camposOrden.includes(req.query.orden)
+            ? req.query.orden
+            : 'id_materia';
+
+        // definimos la dirección del orden
+        const direccion = req.query.direccion?.toUpperCase() === 'DESC'
+            ? 'DESC'
+            : 'ASC';
+
+        // buscamos por nombre o descripción
+        const where = buscar
+            ? {
+                [Op.or]: [
+                    { nombre: { [Op.like]: `%${buscar}%` } },
+                    { descripcion: { [Op.like]: `%${buscar}%` } }
+                ]
+            }
+            : {};
+
+        // obtenemos las materias y la cantidad total
+        const { count, rows } = await Materia.findAndCountAll({
+            where,
+            limit: limite,
+            offset: (pagina - 1) * limite,
+            order: [[orden, direccion]]
+        });
+
+        // respondemos con los datos y la información de paginación
+        res.status(200).json({
+            datos: rows,
+            totalRegistros: count,
+            pagina,
+            limite,
+            totalPaginas: Math.ceil(count / limite)
+        });
+
     } catch (error) {
-    console.error("Error al obtener materias:", error);
-    res.status(500).json({ mensaje: "Error interno al cargar la lista de materias" });
+        console.error("Error al obtener materias:", error);
+
+        res.status(500).json({
+            mensaje: "Error interno al cargar la lista de materias"
+        });
     }
 };
+
 
 // GET: obtener una materia especifica por su ID
 const obtenerMateriaPorId = async (req, res) => {
@@ -46,7 +102,9 @@ const crearMateria = async (req, res) => {
         });
     }
 
-    const nuevaMateria = await Materia.create({ nombre, descripcion });
+    const nuevaMateria = await Materia.create({
+        nombre: nombre.trim(), 
+        descripcion : descripcion?.trim() || null});
 
     res.status(201)
     .json({ mensaje: "Materia creada correctamente", materia: nuevaMateria });
@@ -54,7 +112,7 @@ const crearMateria = async (req, res) => {
     console.error("Error al crear la materia:", error);
 
     if (error.name === "SequelizeUniqueConstraintError") {
-        return res.status(400)
+        return res.status(409)
         .json({ mensaje: "Ya existe una materia con ese nombre" });
     }
 
@@ -65,47 +123,75 @@ const crearMateria = async (req, res) => {
 // PUT: actualizar una materia existente
 const actualizarMateria = async (req, res) => {
     try {
-    const { id } = req.params;
-    const { nombre, descripcion } = req.body;
+        const { id } = req.params;
+        const { nombre, descripcion } = req.body;
 
-    // Validamos el nombre si se envía, ya que se puede mantener el actual
-    if (nombre !== undefined && (typeof nombre !== "string" || !nombre.trim())) {
-        return res.status(400).json({
-        mensaje: "El nombre debe ser un texto válido",
+        // validamos el nombre si se envía
+        if (nombre !== undefined &&
+            (typeof nombre !== "string" || !nombre.trim())) {
+            return res.status(400).json({
+                mensaje: "El nombre debe ser un texto válido"
+            });
+        }
+
+        // validamos la descripción si se envía
+        if (descripcion !== undefined &&
+            descripcion !== null &&
+            typeof descripcion !== "string") {
+            return res.status(400).json({
+                mensaje: "La descripción debe ser un texto"
+            });
+        }
+
+        // buscamos la materia por su ID
+        const materia = await Materia.findByPk(id);
+
+        if (!materia) {
+            return res.status(404).json({
+                mensaje: "Materia no encontrada"
+            });
+        }
+
+        // armamos un objeto solo con los campos enviados
+        const cambios = {};
+
+        if (nombre !== undefined) {
+            cambios.nombre = nombre.trim();
+        }
+
+        if (descripcion !== undefined) {
+            cambios.descripcion = descripcion?.trim() || null;
+        }
+
+        // validamos que se haya enviado al menos un campo para actualizar
+        if (Object.keys(cambios).length === 0) {
+            return res.status(400).json({
+                mensaje: "Debe enviar al menos un campo para actualizar"
         });
-    }
+}
+        // aplicamos los cambios
+        await materia.update(cambios);
 
-    // La descripción es opcional y puede ser null, pero si se envía debe ser un texto
-    if (descripcion !== undefined && descripcion !== null && typeof descripcion !== "string") {
-        return res.status(400).json({
-        mensaje: "La descripción debe ser un texto",
+        res.status(200).json({
+            mensaje: "Materia actualizada correctamente",
+            datos: materia
         });
-    }
 
-    const materia = await Materia.findByPk(id);
-
-    if (!materia) {
-        return res.status(404).json({ mensaje: "Materia no encontrada" });
-    }
-
-    // Conservamos los campos que no se envían. En descripción, null se permite para poder dejarla vacía.
-    await materia.update({
-        nombre: nombre || materia.nombre,
-        descripcion: descripcion !== undefined ? descripcion : materia.descripcion,
-    });
-    res.status(200)
-    .json({ mensaje: "Materia actualizada correctamente", materia: materia });
     } catch (error) {
-    console.error("Error al actualizar la materia:", error);
+        console.error("Error al actualizar la materia:", error);
 
-    if (error.name === "SequelizeUniqueConstraintError") {
-        return res.status(400)
-        .json({ mensaje: "Ya existe una materia con ese nombre" });
-    }
+        if (error.name === "SequelizeUniqueConstraintError") {
+            return res.status(409).json({
+                mensaje: "Ya existe una materia con ese nombre"
+            });
+        }
 
-    res.status(500).json({ mensaje: "Error interno al actualizar la materia" });
+        res.status(500).json({
+            mensaje: "Error interno al actualizar la materia"
+        });
     }
 };
+
 
 // DELETE: eliminar una materia existente
 const eliminarMateria = async (req, res) => {
