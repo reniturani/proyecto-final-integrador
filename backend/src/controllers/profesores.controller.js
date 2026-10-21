@@ -1,5 +1,5 @@
 const Profesor = require('../models/profesores.js');
-const Materia = require('../models/materia.js');
+const Materia = require('../models/materias.js');
 const bcrypt = require('bcrypt');
 const { Op } = require('sequelize'); 
 
