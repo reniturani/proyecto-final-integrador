@@ -219,3 +219,57 @@
     font-size: 27px;
   }
 }
+
+
+/* Tarjetas de profesores */
+.profesores-lista {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 24px;
+}
+
+.profesor-tarjeta {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 24px;
+    background: #ffffff;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+}
+
+.profesor-foto {
+    width: 88px;
+    height: 88px;
+    flex-shrink: 0;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.profesor-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.profesor-info h3 {
+    margin-bottom: 12px;
+    font-size: 21px;
+    color: var(--color-text);
+}
+
+.profesor-info p {
+    margin-bottom: 10px;
+    color: #555555;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.profesor-info p:last-child {
+    margin-bottom: 0;
+}
+
+.aprender-boton:disabled {
+    opacity: 0.7;
+    cursor: wait;
+}
