@@ -10,7 +10,7 @@ const {
 } = require('../controllers/estudiantes.controller');
 
 // importamos el middleware de autenticacion
-//const { verificarToken } = require('../middlewares/auth.middleware');
+const { verificarToken } = require('../middlewares/auth.middleware');
 
 // GET: obtener todos los estudiantes (publico)
 router.get('/', obtenerEstudiantes);
