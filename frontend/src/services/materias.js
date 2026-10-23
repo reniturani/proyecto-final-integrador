@@ -1,0 +1,43 @@
+const API_URL = 'http://localhost:3000/api/materias'
+
+// Obtener materias con búsqueda, paginación y ordenamiento
+export async function obtenerMaterias({
+    pagina = 1,
+    limite = 10,
+    buscar = '',
+    orden = 'id_materia',
+    direccion = 'ASC'
+} = {}) {
+    const parametros = new URLSearchParams({
+        pagina: String(pagina),
+        limite: String(limite),
+        buscar,
+        orden,
+        direccion
+    })
+
+    const respuesta = await fetch(`${API_URL}?${parametros.toString()}`)
+    const datos = await respuesta.json()
+
+    if (!respuesta.ok) {
+        throw new Error(
+            datos.mensaje || 'No se pudieron cargar las materias'
+        )
+    }
+
+    return datos
+}
+
+// Obtener una materia por su ID
+export async function obtenerMateriaPorId(id) {
+    const respuesta = await fetch(`${API_URL}/${id}`)
+    const datos = await respuesta.json()
+
+    if (!respuesta.ok) {
+        throw new Error(
+            datos.mensaje || 'No se pudo cargar la materia'
+        )
+    }
+
+    return datos
+}

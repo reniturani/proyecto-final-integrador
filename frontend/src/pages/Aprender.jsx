@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 import '../App.css'
+import '../styles/aprender.css'
+import { obtenerMaterias } from '../services/materias'
+import { buscarProfesores as consultarProfesores } from '../services/profesores'
 
 function Aprender() {
     const [materias, setMaterias] = useState([])
@@ -9,65 +12,34 @@ function Aprender() {
     const [error, setError] = useState('')
     const [busquedaRealizada, setBusquedaRealizada] = useState(false)
     const [buscando, setBuscando] = useState(false)
-
+    
+    
     useEffect(() => {
         async function cargarMaterias() {
             try {
-                const respuesta = await fetch(
-                    'http://localhost:3000/api/materias?limite=100'
-                )
-
-                if (!respuesta.ok) {
-                    throw new Error('No se pudieron cargar las materias')
-                }
-
-                const datos = await respuesta.json()
+                const datos = await obtenerMaterias({ limite: 100 })
                 setMaterias(datos.datos || [])
             } catch (error) {
                 console.error('Error al cargar materias:', error)
                 setError('No se pudieron cargar las materias.')
             }
         }
-
         cargarMaterias()
     }, [])
-
+    
     async function buscarProfesores() {
         setBuscando(true)
         setError('')
         setBusquedaRealizada(false)
         setProfesores([])
-
+        
         try {
-            const parametros = new URLSearchParams()
-
-            if (materiaSeleccionada) {
-                parametros.set('materia', materiaSeleccionada)
-            }
-
-            if (modalidadSeleccionada) {
-                parametros.set('modalidad', modalidadSeleccionada)
-            }
-
-            const respuesta = await fetch(
-                `http://localhost:3000/api/profesores?${parametros.toString()}`
-            )
-
-            const datos = await respuesta.json()
-
-            if (respuesta.status === 404) {
-                setProfesores([])
-                setBusquedaRealizada(true)
-                return
-            }
-
-            if (!respuesta.ok) {
-                throw new Error(
-                    datos.mensaje || 'No se pudieron buscar los profesores.'
-                )
-            }
-
-            setProfesores(datos.profesores || [])
+            const datos = await consultarProfesores({
+                materia: materiaSeleccionada,
+                modalidad: modalidadSeleccionada
+            })
+            
+            setProfesores(datos.profesores)
             setBusquedaRealizada(true)
         } catch (error) {
             console.error('Error al buscar profesores:', error)
