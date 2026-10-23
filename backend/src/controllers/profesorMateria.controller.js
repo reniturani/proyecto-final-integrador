@@ -1,7 +1,7 @@
 
 const ProfesorMateria = require('../models/profesorMateria.js');
 const Profesor = require('../models/profesores.js');
-const Materia = require('../models/materia.js');
+const Materia = require('../models/materias.js');
 const { Op } = require('sequelize');
 
 // GET: obtener las materias de un profesor

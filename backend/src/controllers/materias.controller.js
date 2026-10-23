@@ -1,4 +1,4 @@
-const Materia = require("../models/materia.js");
+const Materia = require("../models/materias.js");
 const { Op } = require("sequelize");
 
 // GET: obtener todas las materias 
