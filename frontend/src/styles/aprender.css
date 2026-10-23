@@ -1,0 +1,166 @@
+/* Pantalla Aprender */
+.aprender-header {
+    margin-bottom: 40px;
+}
+
+.aprender-header p {
+    color: #555555;
+    font-size: 17px;
+    line-height: 1.6;
+}
+
+.aprender-filtros {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    align-items: end;
+    gap: 20px;
+    padding: 28px;
+    margin-bottom: 56px;
+
+    background: #ffffff;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+}
+
+.filtro {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.filtro label {
+    color: var(--color-text);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.filtro select {
+    width: 100%;
+    min-height: 48px;
+    padding: 0 36px 0 14px;
+    color: var(--color-text);
+    background-color: var(--color-background);
+    border: 1px solid var(--color-gray);
+    border-radius: var(--radius-button);
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23555555' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+}
+
+.aprender-boton {
+    min-height: 48px;
+    padding: 0 22px;
+    color: var(--color-background);
+    background: var(--color-primary);
+    border: 1px solid var(--color-primary);
+    border-radius: var(--radius-button);
+    font-weight: 600;
+}
+
+.aprender-boton:hover {
+    opacity: 0.85;
+}
+
+/* Resultados de profesores */
+.aprender-resultados h2 {
+    margin-bottom: 12px;
+    font-size: 32px;
+}
+
+.aprender-resultados p {
+    color: #555555;
+    line-height: 1.6;
+}
+
+/* Adaptación a pantallas pequeñas */
+@media (max-width: 700px) {
+    .navbar-menu-button {
+    top: 16px;
+    left: 16px;
+    }
+
+    .navbar-dropdown {
+    width: min(280px, 85vw);
+    }
+
+    .app.menu-abierto .contenido-principal {
+    margin-left: min(280px, 85vw);
+    }
+
+    .page-container {
+    width: calc(100% - 32px);
+    margin: 88px auto 40px;
+    }
+
+    .aprender-filtros {
+    grid-template-columns: 1fr;
+    padding: 20px;
+    gap: 20px;
+    }
+
+    .aprender-boton {
+    width: 100%;
+    }
+
+    .aprender-resultados h2 {
+    font-size: 27px;
+    }
+}
+
+
+/* Tarjetas de profesores */
+.profesores-lista {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 24px;
+}
+
+.profesor-tarjeta {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 24px;
+    background: #ffffff;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+}
+
+.profesor-foto {
+    width: 88px;
+    height: 88px;
+    flex-shrink: 0;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.profesor-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.profesor-info h3 {
+    margin-bottom: 12px;
+    font-size: 21px;
+    color: var(--color-text);
+}
+
+.profesor-info p {
+    margin-bottom: 10px;
+    color: #555555;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.profesor-info p:last-child {
+    margin-bottom: 0;
+}
+
+.aprender-boton:disabled {
+    opacity: 0.7;
+    cursor: wait;
+}
+

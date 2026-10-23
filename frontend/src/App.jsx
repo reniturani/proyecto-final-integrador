@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Navbar from './components/Navbar'
 import Aprender from './pages/Aprender'
+import Materias from './pages/Materias'
 import './App.css'
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
 
       <div className="contenido-principal">
         {paginaActual === 'Aprender' && <Aprender />}
+        {paginaActual === 'Materias' && <Materias />}
       </div>
     </div>
   )
