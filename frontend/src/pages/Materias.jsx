@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react'
 import {
     obtenerMaterias,
-    obtenerMateriaPorId
+    obtenerMateriaPorId,
+    actualizarMateria,
+    eliminarMateria
 } from '../services/materias'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
 import '../styles/materias.css'
 import '../App.css'
 
@@ -25,6 +29,11 @@ function Materias() {
     const [idMateriaSeleccionada, setIdMateriaSeleccionada] = useState(null)
     const [cargandoDetalle, setCargandoDetalle] = useState(false)
     const [errorDetalle, setErrorDetalle] = useState('')
+
+    const [modoEdicion, setModoEdicion] = useState(false)
+    const [nombreEditado, setNombreEditado] = useState('')
+    const [descripcionEditada, setDescripcionEditada] = useState('')
+    const [guardando, setGuardando] = useState(false)
 
     useEffect(() => {
         async function cargarMaterias() {
@@ -84,7 +93,12 @@ function Materias() {
 
         try {
             const datos = await obtenerMateriaPorId(id)
-            setMateriaDetalle(datos.materia || datos)
+            const materia = datos.materia || datos
+            
+            setMateriaDetalle(materia)
+            setNombreEditado(materia.nombre || '')
+            setDescripcionEditada(materia.descripcion || '')
+            setModoEdicion(false)
         } catch (error) {
             console.error('Error al cargar el detalle de la materia:', error)
             setErrorDetalle('No se pudo cargar la materia. Intentá nuevamente.')
@@ -104,6 +118,153 @@ function Materias() {
         setMateriaDetalle(null)
         setErrorDetalle('')
     }
+
+    const guardarCambios = async () => {
+    const nombre = nombreEditado.trim()
+    const descripcion = descripcionEditada.trim()
+
+    if (!nombre) {
+        setErrorDetalle('El nombre de la materia es obligatorio.')
+        return
+    }
+
+    setGuardando(true)
+    setErrorDetalle('')
+
+    try {
+        const token = localStorage.getItem('token')
+
+        if (!token) {
+            setErrorDetalle(
+                'Todavía no hay un token de sesión. El guardado se podrá probar cuando se conecte el login.'
+            )
+            return
+        }
+
+        const respuesta = await actualizarMateria(
+            idMateriaSeleccionada,
+            { nombre, descripcion },
+            token
+        )
+
+        const materiaActualizada =
+            respuesta.materia || respuesta
+
+        setMateriaDetalle(materiaActualizada)
+        setNombreEditado(materiaActualizada.nombre || '')
+        setDescripcionEditada(materiaActualizada.descripcion || '')
+        setModoEdicion(false)
+    } catch (error) {
+        setErrorDetalle(
+            error.message || 'No se pudieron guardar los cambios.'
+        )
+    } finally {
+        setGuardando(false)
+    }
+}
+
+    const confirmarEliminacion = async () => {
+    const confirmar = window.confirm(
+        `¿Estás segura de que querés eliminar la materia "${materiaDetalle.nombre}"?`
+    )
+
+    if (!confirmar) return
+
+    setErrorDetalle('')
+    setGuardando(true)
+
+    try {
+        const token = localStorage.getItem('token')
+
+        if (!token) {
+            setErrorDetalle(
+                'No hay un token de sesión. El login debe estar conectado para eliminar materias.'
+            )
+            return
+        }
+
+        await eliminarMateria(idMateriaSeleccionada, token)
+
+        setMostrarDetalle(false)
+        setMateriaDetalle(null)
+        setModoEdicion(false)
+        setPagina(1)
+        setIntento((anterior) => anterior + 1)
+    } catch (error) {
+        setErrorDetalle(
+            error.message || 'No se pudo eliminar la materia.'
+        )
+    } finally {
+        setGuardando(false)
+    }
+}
+
+const exportarPDF = async () => {
+    try {
+        let listaMaterias = []
+        let paginaActual = 1
+        let totalPaginasExportacion = 1
+
+        while (paginaActual <= totalPaginasExportacion) {
+            const datos = await obtenerMaterias({
+                pagina: paginaActual,
+                limite: 100,
+                buscar,
+                orden,
+                direccion
+            })
+
+            const materiasPagina = datos.datos || []
+
+            listaMaterias = [...listaMaterias, ...materiasPagina]
+
+            totalPaginasExportacion = datos.totalPaginas || 1
+            paginaActual++
+        }
+
+        if (listaMaterias.length === 0) {
+            alert('No hay materias para exportar.')
+            return
+        }
+
+        const documento = new jsPDF()
+
+        documento.setFontSize(16)
+        documento.text('Listado completo de materias', 14, 15)
+
+        documento.setFontSize(10)
+        documento.text(`Total de materias: ${listaMaterias.length}`, 14, 23)
+
+        autoTable(documento, {
+            startY: 30,
+            head: [['ID', 'Nombre', 'Descripción']],
+            body: listaMaterias.map((materia) => [
+                materia.id_materia,
+                materia.nombre,
+                materia.descripcion || 'Sin descripción'
+            ]),
+            styles: {
+                fontSize: 9,
+                cellPadding: 3,
+                overflow: 'linebreak'
+            },
+            headStyles: {
+                fillColor: [50, 70, 100]
+            },
+            columnStyles: {
+                0: { cellWidth: 20 },
+                1: { cellWidth: 45 },
+                2: { cellWidth: 'auto' }
+            },
+            margin: { top: 15, right: 14, bottom: 15, left: 14 }
+        })
+
+        documento.save('listado-completo-materias.pdf')
+    } catch (error) {
+        alert(error.message || 'No se pudo generar el PDF.')
+    }
+}
+
 
     if (mostrarDetalle) {
         return (
@@ -152,23 +313,84 @@ function Materias() {
                             </div>
 
                             <div>
+                                {modoEdicion ? (
+                                    <input
+                                    type="text"
+                                    value={nombreEditado}
+                                    onChange={(e) => setNombreEditado(e.target.value)}
+                                    placeholder="Nombre de la materia"
+                                    />
+                                ) : (
                                 <h2>{materiaDetalle.nombre}</h2>
+                                )}
+                                
                                 <p>ID de materia: {materiaDetalle.id_materia}</p>
-                            </div>
+                                </div>
                         </div>
-
-                        <div className="materia-detalle-campo">
-                            <h3>Nombre</h3>
-                            <p>{materiaDetalle.nombre}</p>
-                        </div>
-
-                        <div className="materia-detalle-campo">
+                        
+                        <div className="materia-detalle-descripcion">
                             <h3>Descripción</h3>
-                            <p>
-                                {materiaDetalle.descripcion ||
-                                    'Sin descripción disponible.'}
-                            </p>
-                        </div>
+                            
+                            {modoEdicion ? (
+                                <textarea
+                                    value={descripcionEditada}
+                                    onChange={(e) => setDescripcionEditada(e.target.value)}
+                                    placeholder="Descripción de la materia"
+                                    rows={4}
+                                />
+                            ) : (
+                            <p>{materiaDetalle.descripcion || 'Sin descripción'}</p>
+                            )}
+                            </div>
+
+                        <div className="materias-acciones">
+                            {!modoEdicion ? (
+                                <>
+                                <button
+                                type="button"
+                                className="materias-boton"
+                                onClick={() => setModoEdicion(true)}
+                                >
+                                    Editar materia
+                                    </button>
+                                    
+                                    <button
+                                    type="button"
+                                    className="materias-boton secundario"
+                                    onClick={confirmarEliminacion}
+                                    disabled={guardando}
+                                    >
+                                        Eliminar materia
+                                        </button>
+                                        </>
+
+                            ) : (
+                            <>
+                            <button
+                            type="button"
+                            className="materias-boton"
+                            onClick={guardarCambios}
+                            disabled={guardando}
+                            >
+                                {guardando ? 'Guardando...' : 'Guardar cambios'}
+                                </button>
+                                
+                                <button
+                                type="button"
+                                className="materias-boton secundario"
+                                onClick={() => {
+                                    setNombreEditado(materiaDetalle.nombre || '')
+                                    setDescripcionEditada(materiaDetalle.descripcion || '')
+                                    setModoEdicion(false)
+                                    setErrorDetalle('')
+                                }}
+                                disabled={guardando}
+                                >
+                                    Cancelar
+                                    </button>
+                                    </>
+                                )}
+                                </div>
                     </section>
                 )}
             </main>
@@ -264,6 +486,16 @@ function Materias() {
                                 : `${totalRegistros} materias encontradas`}
                         </p>
                     )}
+                    
+                    {!cargando && !error && totalRegistros > 0 && (
+                        <button
+                        type="button"
+                        className="materias-boton"
+                        onClick={exportarPDF}
+                        >
+                            Descargar listado
+                            </button>
+                        )}
                 </div>
 
                 {cargando && (

@@ -16,7 +16,7 @@ function Navbar({ onNavegar, menuAbierto, setMenuAbierto }) {
         onClick={() => setMenuAbierto(!menuAbierto)}
         aria-expanded={menuAbierto}
         >
-        {menuAbierto ? 'Cerrar ✕' : 'Menú ☰'}
+        {menuAbierto ? '✕' : '☰'}
         </button>
         
         {menuAbierto && (
