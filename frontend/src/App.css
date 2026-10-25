@@ -49,7 +49,7 @@
   left: 0;
   z-index: 11;
 
-  width: 280px;
+  width: 240px;
   padding: 100px 24px 32px;
 
   display: flex;
@@ -79,12 +79,12 @@
 /* Contenido principal: se desplaza al abrir el menú */
 .contenido-principal {
   min-height: 100vh;
-  margin-left: 0;
+  margin-left: 16px;
   transition: margin-left 0.3s ease;
 }
 
 .app.menu-abierto .contenido-principal {
-  margin-left: 280px;
+  margin-left: 240px;
 }
 
 /* Contenido general de las páginas */

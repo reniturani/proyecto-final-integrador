@@ -1,4 +1,3 @@
-
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -15,6 +14,30 @@ const login = async (req, res) => {
             });
         }
 
+        // Login del administrador
+        if (tipo === 'administrador') {
+            const emailValido = email === process.env.ADMIN_EMAIL;
+            const passwordValida = password === process.env.ADMIN_PASSWORD;
+
+            if (!emailValido || !passwordValida) {
+                return res.status(401).json({
+                    mensaje: 'Credenciales incorrectas'
+                });
+            }
+
+            const token = jwt.sign(
+                { id: 'admin', tipo: 'administrador' },
+                process.env.JWT_SECRET,
+                { expiresIn: '1h' }
+            );
+
+            return res.status(200).json({
+                mensaje: 'Login exitoso',
+                token
+            });
+        }
+
+        // Login de estudiantes y profesores
         let modelo;
 
         if (tipo === 'estudiante') {
