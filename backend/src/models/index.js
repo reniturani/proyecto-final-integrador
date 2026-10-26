@@ -16,6 +16,8 @@ Materia.belongsToMany(Profesor, {
     otherKey: 'id_profesor'
 });
 
+
+
 module.exports = {
     Estudiante,
     Profesor,

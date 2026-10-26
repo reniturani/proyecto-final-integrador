@@ -1,0 +1,130 @@
+/* Contenedor general de la aplicación */
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.app {
+  min-height: 100vh;
+}
+
+/* Barra de navegación */
+.navbar {
+  position: relative;
+  z-index: 10;
+}
+
+/* Botón para abrir y cerrar el menú */
+.navbar-menu-button {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 12;
+
+  padding: 10px 16px;
+  color: var(--color-background);
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-button);
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(26, 51, 0, 0.12);
+}
+
+.navbar-menu-button:hover {
+  opacity: 0.85;
+}
+
+/* Foco visible para navegación con teclado */
+.navbar-menu-button:focus-visible,
+.navbar-link:focus-visible {
+  outline: 2px solid var(--color-terracotta);
+  outline-offset: 4px;
+}
+
+/* Panel lateral desplegable */
+.navbar-dropdown {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 11;
+
+  width: 240px;
+  padding: 100px 24px 32px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+
+  background: var(--color-background);
+  border-right: 1px solid var(--color-border);
+  box-shadow: 8px 0 24px rgba(26, 51, 0, 0.08);
+}
+
+.navbar-link {
+  display: block;
+  padding: 14px 16px;
+  color: var(--color-text);
+  border-radius: var(--radius-button);
+  font-size: 16px;
+  font-weight: 500;
+  transition: background 0.2s ease;
+}
+
+.navbar-link:hover {
+  background: var(--color-mint);
+}
+
+/* Contenido principal: se desplaza al abrir el menú */
+.contenido-principal {
+  min-height: 100vh;
+  margin-left: 16px;
+  transition: margin-left 0.3s ease;
+}
+
+.app.menu-abierto .contenido-principal {
+  margin-left: 240px;
+}
+
+/* Contenido general de las páginas */
+.page-container {
+  width: calc(100% - 48px);
+  max-width: 1200px;
+  margin: 64px auto;
+}
+
+.page-title {
+  max-width: 850px;
+  margin-bottom: 24px;
+  font-size: clamp(36px, 6vw, 64px);
+  line-height: 1.08;
+  letter-spacing: -1px;
+}
+
+.highlight {
+  background: var(--color-highlight);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* Adaptación general a pantallas pequeñas */
+@media (max-width: 700px) {
+  .navbar-menu-button {
+    top: 16px;
+    left: 16px;
+  }
+
+  .navbar-dropdown {
+    width: min(280px, 85vw);
+  }
+
+  .app.menu-abierto .contenido-principal {
+    margin-left: min(280px, 85vw);
+  }
+
+  .page-container {
+    width: calc(100% - 32px);
+    margin: 88px auto 40px;
+  }
+}

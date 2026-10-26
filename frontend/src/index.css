@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  font-family: 'Inter', sans-serif;
+  color: #1a3300;
+  background: #fcfaf5;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  --color-text: #1a3300;
+  --color-background: #fcfaf5;
+  --color-primary: #1a3300;
+  --color-highlight: #ffe95c;
+  --color-teal: #a8e5e5;
+  --color-mint: #d5f5c2;
+  --color-blush: #f6d0ff;
+  --color-terracotta: #cb5521;
+  --color-gray: #b6b6b6;
+  --color-light-gray: #f1f1f1;
+  --color-border: #e5e4e7;
+
+  --font-heading: 'Bricolage Grotesque', sans-serif;
+  --font-body: 'Inter', sans-serif;
+
+  --radius-button: 6px;
+  --radius-card: 12px;
+  --radius-navbar: 16px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1,
+h2,
+h3 {
+  color: var(--color-text);
+}
+
+h1,
+h2 {
+  font-family: var(--font-heading);
+  font-weight: 800;
+}
+
+#root {
+  min-height: 100vh;
+}
