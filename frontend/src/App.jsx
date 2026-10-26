@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import Navbar from './components/Navbar'
-import Bienvenida from './pages/Bienvenida' 
+import Bienvenida from './pages/Bienvenida.jsx' 
 import Login from './pages/Login'
 import Inicio from './pages/Inicio'
 import Aprender from './pages/Aprender'
