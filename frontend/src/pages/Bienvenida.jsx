@@ -1,6 +1,6 @@
 function Bienvenida({ onNavegar }) {
     return (
-        <div className="page-container">
+        <div className="page-container pantalla-centrada">
             <h1 className="page-title">
                 Conectamos <span className="highlight">talento</span> y ganas de aprender
             </h1>

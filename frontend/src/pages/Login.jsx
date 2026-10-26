@@ -1,6 +1,6 @@
 function Login() {
     return (
-        <div className="page-container">
+        <div className="page-container pantalla-centrada">
             <h1 className="page-title">Iniciar <span className="highlight">sesión</span></h1>
         
             <form className="formulario" onSubmit={(e) => e.preventDefault()}>
