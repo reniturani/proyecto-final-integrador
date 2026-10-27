@@ -83,3 +83,25 @@ export async function eliminarMateria(id, token) {
 
     return datos
 }
+
+// Crear una materia (requiere token de administrador)
+export async function crearMateria(materia, token) {
+    const respuesta = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(materia)
+    })
+
+    const datos = await respuesta.json()
+
+    if (!respuesta.ok) {
+        throw new Error(
+            datos.mensaje || 'No se pudo crear la materia'
+        )
+    }
+
+    return datos
+}
