@@ -3,7 +3,8 @@ import {
     obtenerMaterias,
     obtenerMateriaPorId,
     actualizarMateria,
-    eliminarMateria
+    eliminarMateria,
+    crearMateria
 } from '../services/materias'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
@@ -34,6 +35,13 @@ function Materias() {
     const [nombreEditado, setNombreEditado] = useState('')
     const [descripcionEditada, setDescripcionEditada] = useState('')
     const [guardando, setGuardando] = useState(false)
+    const [mostrarFormulario, setMostrarFormulario] = useState(false)
+    const [nombreNuevo, setNombreNuevo] = useState('')
+    const [descripcionNueva, setDescripcionNueva] = useState('')
+    const [errorCreacion, setErrorCreacion] = useState('')
+
+    const esAdministrador =
+    localStorage.getItem('usuarioRol') === 'administrador'
 
     useEffect(() => {
         async function cargarMaterias() {
@@ -157,6 +165,47 @@ function Materias() {
     } catch (error) {
         setErrorDetalle(
             error.message || 'No se pudieron guardar los cambios.'
+        )
+    } finally {
+        setGuardando(false)
+    }
+}
+
+async function guardarNuevaMateria(evento) {
+    evento.preventDefault()
+
+    const nombre = nombreNuevo.trim()
+    const descripcion = descripcionNueva.trim()
+
+    if (!nombre) {
+        setErrorCreacion('El nombre de la materia es obligatorio.')
+        return
+    }
+
+    const token = localStorage.getItem('token')
+
+    if (!token) {
+        setErrorCreacion('Necesitás iniciar sesión para realizar esta acción.')
+        return
+    }
+
+    setGuardando(true)
+    setErrorCreacion('')
+
+    try {
+        await crearMateria(
+            { nombre, descripcion },
+            token
+        )
+
+        setNombreNuevo('')
+        setDescripcionNueva('')
+        setMostrarFormulario(false)
+        setPagina(1)
+        setIntento((anterior) => anterior + 1)
+    } catch (error) {
+        setErrorCreacion(
+            error.message || 'No se pudo crear la materia.'
         )
     } finally {
         setGuardando(false)
@@ -398,16 +447,93 @@ const exportarPDF = async () => {
     }
 
     return (
-        <main className="page-container">
-            <section className="materias-header">
-                <h1 className="page-title">
-                    Listado de <span className="highlight">materias</span>
+    <main className="page-container">
+        <section className="materias-header"></section>
+        
+        <section className="materias-header">
+            <h1 className="page-title">
+                Gestión de <span className="highlight">Materias</span>
                 </h1>
-
+                
                 <p>
-                    Consultá las materias disponibles y encontrá la que buscás.
-                </p>
-            </section>
+                    Consultá, organizá y administrá las materias disponibles.
+                    </p>
+                    </section>
+                    
+
+<div className="materias-barra-acciones">
+
+    <div className="materias-botones-superiores">
+        {esAdministrador && (
+            <button
+                type="button"
+                className="materias-boton"
+                onClick={() => {
+                    setMostrarFormulario(!mostrarFormulario)
+                    setErrorCreacion('')
+                }}
+            >
+                {mostrarFormulario ? 'Cancelar' : '+ Crear materia'}
+            </button>
+        )}
+
+        <button
+            type="button"
+            className="materias-boton secundario"
+            onClick={exportarPDF}
+        >
+            Exportar a PDF
+        </button>
+    </div>
+</div>
+
+                                    
+                                    {mostrarFormulario && esAdministrador && (
+                                        <form
+                                        className="materias-formulario"
+                                        onSubmit={guardarNuevaMateria}
+                                        >
+                                            <h2>Nueva materia</h2>
+                                            <div className="materias-campo">
+                                                <label htmlFor="nombre-nueva-materia">Nombre</label>
+                                                <input
+                                                id="nombre-nueva-materia"
+                                                type="text"
+                                                value={nombreNuevo}
+                                                onChange={(e) => setNombreNuevo(e.target.value)}
+                                                placeholder="Ej. Matemática"
+                                                required
+                                                />
+                                                </div>
+                                                
+                                                <div className="materias-campo">
+                                                    <label htmlFor="descripcion-nueva-materia">
+                                                        Descripción
+                                                        </label>
+                                                        <textarea
+                                                        id="descripcion-nueva-materia"
+                                                        value={descripcionNueva}
+                                                        onChange={(e) => setDescripcionNueva(e.target.value)}
+                                                        placeholder="Descripción de la materia"
+                                                        rows={3}
+                                                        />
+                                                        </div>
+                                                        
+                                                        {errorCreacion && (
+                                                            <p className="materias-error">{errorCreacion}</p>
+                                                            )}
+                                                            
+                                                            <button
+                                                            type="submit"
+                                                            className="materias-boton"
+                                                            disabled={guardando}
+                                                            >
+                                                                {guardando ? 'Guardando...' : 'Guardar materia'}
+                                                                </button>
+                                                                </form>
+                                                            )}
+
+
 
             <section className="materias-filtros">
                 <div className="materias-busqueda">
@@ -423,56 +549,6 @@ const exportarPDF = async () => {
                         onChange={cambiarBusqueda}
                     />
                 </div>
-
-                <div className="materias-opciones">
-                    <div className="materias-control">
-                        <label htmlFor="limite-materias">
-                            Registros por página
-                        </label>
-
-                        <select
-                            id="limite-materias"
-                            value={limite}
-                            onChange={cambiarLimite}
-                        >
-                            <option value={5}>5</option>
-                            <option value={10}>10</option>
-                            <option value={20}>20</option>
-                            <option value={50}>50</option>
-                        </select>
-                    </div>
-
-                    <div className="materias-control">
-                        <label htmlFor="orden-materias">
-                            Ordenar por
-                        </label>
-
-                        <select
-                            id="orden-materias"
-                            value={orden}
-                            onChange={cambiarOrden}
-                        >
-                            <option value="id_materia">ID</option>
-                            <option value="nombre">Nombre</option>
-                            <option value="descripcion">Descripción</option>
-                        </select>
-                    </div>
-
-                    <div className="materias-control">
-                        <label htmlFor="direccion-materias">
-                            Dirección
-                        </label>
-
-                        <select
-                            id="direccion-materias"
-                            value={direccion}
-                            onChange={cambiarDireccion}
-                        >
-                            <option value="ASC">Ascendente</option>
-                            <option value="DESC">Descendente</option>
-                        </select>
-                    </div>
-                </div>
             </section>
 
             <section className="materias-resultados">
@@ -486,16 +562,6 @@ const exportarPDF = async () => {
                                 : `${totalRegistros} materias encontradas`}
                         </p>
                     )}
-                    
-                    {!cargando && !error && totalRegistros > 0 && (
-                        <button
-                        type="button"
-                        className="materias-boton"
-                        onClick={exportarPDF}
-                        >
-                            Descargar listado
-                            </button>
-                        )}
                 </div>
 
                 {cargando && (
