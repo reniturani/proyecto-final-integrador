@@ -23,7 +23,7 @@ function App() {
 
       <div className="contenido-principal">
         {paginaActual === 'Bienvenida' && <Bienvenida onNavegar={setPaginaActual} />}
-        {paginaActual === 'Login' && <Login />}
+        {paginaActual === 'Login' && <Login onNavegar={setPaginaActual} />}
         
         {/* estas dos rutas las va a crear mai despues pero ya las dejo preparadas  */}
         {paginaActual === 'Registro Profesor' && <div>Componente de Registro Profesor (Mai)</div>}
