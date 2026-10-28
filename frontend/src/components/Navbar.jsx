@@ -1,6 +1,5 @@
 const opciones = [
     { nombre: 'Bienvenida', ruta: '/Bienvenida' },
-    { nombre: 'Login', ruta: '/login' },
     { nombre: 'Aprender', ruta: '/aprender' },
     { nombre: 'Mi perfil', ruta: '/mi-perfil' },
     { nombre: 'Profesores', ruta: '/profesores' },
