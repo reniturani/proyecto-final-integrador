@@ -30,11 +30,24 @@ const obtenerProfesores = async (req, res) => {
             whereCondition.modalidad = modalidad;
         }
 
-        // busqueda por nombre 
+        // Búsqueda inteligente por nombre y/o apellido
         if (nombre) {
-            whereCondition.nombre = {
-                [Op.like]: `%${nombre}%` 
-            };
+            const termino = nombre.trim();
+            
+            if (termino.includes(' ')) {
+                // si escribieron con espacio..
+                const partes = termino.split(' ');
+                whereCondition[Op.and] = [
+                    { nombre: { [Op.like]: `%${partes[0]}%` } },
+                    { apellido: { [Op.like]: `%${partes[1]}%` } }
+                ];
+            } else {
+                // si buscaron una sola palabra..
+                whereCondition[Op.or] = [
+                    { nombre: { [Op.like]: `%${termino}%` } },
+                    { apellido: { [Op.like]: `%${termino}%` } }
+                ];
+            }
         }
 
         // validamos que la materia exista si la enviaron
