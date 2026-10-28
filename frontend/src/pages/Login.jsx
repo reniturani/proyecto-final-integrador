@@ -1,6 +1,6 @@
     import { useState } from 'react'
 
-    function Login({ onNavegar }) {
+    function Login({ onNavegar, onLoginExitoso }) {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [tipo, setTipo] = useState('administrador')
@@ -31,6 +31,7 @@
         // guarda el token para usarlo en las peticiones
         localStorage.setItem('token', datos.token)
         localStorage.setItem('usuarioRol', tipo)
+        onLoginExitoso(tipo) // actualiza el estado de sesión en App.jsx
 
         // si es administrador, lo llevamos a su panel. si no, al inicio
         if (tipo === 'administrador') {
