@@ -36,7 +36,7 @@
         if (tipo === 'administrador') {
             onNavegar('Profesores')
         } else {
-            onNavegar('Inicio')
+            onNavegar('Bienvenida')
         }
         } catch (err) {
         setError(err.message)

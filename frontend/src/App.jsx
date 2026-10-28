@@ -29,7 +29,7 @@ function App() {
         {paginaActual === 'Registro Profesor' && <div>Componente de Registro Profesor (Mai)</div>}
         {paginaActual === 'Registro Estudiante' && <div>Componente de Registro Estudiante (Mai)</div>}
 
-        {paginaActual === 'Inicio' && <Inicio />}
+        
         {paginaActual === 'Aprender' && <Aprender />}
         {paginaActual === 'Mi perfil' && <MiPerfil />}
         {paginaActual === 'Profesores' && <Profesores />}
