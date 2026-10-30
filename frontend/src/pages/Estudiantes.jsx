@@ -143,20 +143,37 @@ function Estudiantes() {
         }
     }
 
-    const exportarPDF = () => {
+
+const exportarPDF = async () => { //Reni esta es la funcion para exportar a PDF
+    try {
+        // Obtener todos los estudiantes, sin limitarse a la página actual.
+        const respuesta = await obtenerEstudiantes({
+            pagina: 1,
+            limite: Math.max(totalRegistros, 1),
+            buscar: busqueda,
+            orden: ordenarPor,
+            direccion: direccionOrden
+        })
+
+        const todosLosEstudiantes = respuesta.datos || []
         const documento = new jsPDF()
 
         documento.setFontSize(18)
         documento.text('Listado de estudiantes', 14, 20)
 
         documento.setFontSize(10)
-        let posicionY = 32
+        documento.text(`Total de estudiantes: ${respuesta.totalRegistros}`, 14, 28)
 
-        if (estudiantes.length === 0) {
+        let posicionY = 38
+
+        if (todosLosEstudiantes.length === 0) {
             documento.text('No hay estudiantes para exportar.', 14, posicionY)
         } else {
-            estudiantes.forEach((estudiante) => {
-                const texto = `#${estudiante.id_estudiante} | ${estudiante.nombre} ${estudiante.apellido} | ${estudiante.email}`
+            todosLosEstudiantes.forEach((estudiante) => {
+                const texto =
+                    `#${estudiante.id_estudiante} | ` +
+                    `${estudiante.nombre} ${estudiante.apellido} | ` +
+                    `${estudiante.email}`
 
                 const lineas = documento.splitTextToSize(texto, 180)
 
@@ -171,7 +188,12 @@ function Estudiantes() {
         }
 
         documento.save('listado_estudiantes.pdf')
+    } catch (err) {
+        console.error('Error al exportar el PDF:', err)
+        setError('No se pudo generar el PDF. Intentá nuevamente.')
     }
+}
+
 
     return (
         <div className="page-container">
