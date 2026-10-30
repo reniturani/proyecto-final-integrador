@@ -1,7 +1,112 @@
 
-const API_URL = 'http://localhost:3000/api/estudiantes'
+const estudiantesIniciales = [
+    {
+        id_estudiante: 1,
+        nombre: 'Martina',
+        apellido: 'Gómez',
+        email: 'martina.gomez@example.com',
+        foto_url: ''
+    },
+    {
+        id_estudiante: 2,
+        nombre: 'Lucas',
+        apellido: 'Fernández',
+        email: 'lucas.fernandez@example.com',
+        foto_url: ''
+    },
+    {
+        id_estudiante: 3,
+        nombre: 'Sofía',
+        apellido: 'Rodríguez',
+        email: 'sofia.rodriguez@example.com',
+        foto_url: ''
+    },
+    {
+        id_estudiante: 4,
+        nombre: 'Tomás',
+        apellido: 'Martínez',
+        email: 'tomas.martinez@example.com',
+        foto_url: ''
+    },
+    {
+        id_estudiante: 5,
+        nombre: 'Valentina',
+        apellido: 'López',
+        email: 'valentina.lopez@example.com',
+        foto_url: ''
+    },
+    {
+        id_estudiante: 6,
+        nombre: 'Mateo',
+        apellido: 'Sánchez',
+        email: 'mateo.sanchez@example.com',
+        foto_url: ''
+    },
+    {
+        id_estudiante: 7,
+        nombre: 'Camila',
+        apellido: 'Torres',
+        email: 'camila.torres@example.com',
+        foto_url: ''
+    },
+    {
+        id_estudiante: 8,
+        nombre: 'Benjamín',
+        apellido: 'Ramírez',
+        email: 'benjamin.ramirez@example.com',
+        foto_url: ''
+    },
+    {
+        id_estudiante: 9,
+        nombre: 'Julieta',
+        apellido: 'Acosta',
+        email: 'julieta.acosta@example.com',
+        foto_url: ''
+    },
+    {
+        id_estudiante: 10,
+        nombre: 'Santiago',
+        apellido: 'Díaz',
+        email: 'santiago.diaz@example.com',
+        foto_url: ''
+    },
+    {
+        id_estudiante: 11,
+        nombre: 'Agustina',
+        apellido: 'Benítez',
+        email: 'agustina.benitez@example.com',
+        foto_url: ''
+    },
+    {
+        id_estudiante: 12,
+        nombre: 'Nicolás',
+        apellido: 'Castro',
+        email: 'nicolas.castro@example.com',
+        foto_url: ''
+    }
+]
 
-// Obtener estudiantes con búsqueda, paginación y ordenamiento
+// Datos temporales: no se realizan solicitudes al backend ni a SQLite.
+let estudiantes = estudiantesIniciales.map(estudiante => ({ ...estudiante }))
+let siguienteId = Math.max(...estudiantes.map(e => e.id_estudiante)) + 1
+
+const ordenarEstudiantes = (lista, orden, direccion) => {
+    const multiplicador = direccion === 'DESC' ? -1 : 1
+
+    return [...lista].sort((a, b) => {
+        const valorA = a[orden] ?? ''
+        const valorB = b[orden] ?? ''
+
+        if (typeof valorA === 'number' && typeof valorB === 'number') {
+            return (valorA - valorB) * multiplicador
+        }
+
+        return String(valorA).localeCompare(String(valorB), 'es', {
+            sensitivity: 'base'
+        }) * multiplicador
+    })
+}
+
 export async function obtenerEstudiantes({
     pagina = 1,
     limite = 10,
@@ -9,89 +114,95 @@ export async function obtenerEstudiantes({
     orden = 'id_estudiante',
     direccion = 'ASC'
 } = {}) {
-    const parametros = new URLSearchParams({
-        pagina: String(pagina),
-        limite: String(limite),
-        buscar,
-        orden,
-        direccion
-    })
+    const termino = buscar.trim().toLowerCase()
 
-    const respuesta = await fetch(`${API_URL}?${parametros.toString()}`)
-    const datos = await respuesta.json()
+    const filtrados = estudiantes.filter(estudiante =>
+        `${estudiante.nombre} ${estudiante.apellido} ${estudiante.email}`
+            .toLowerCase()
+            .includes(termino)
+    )
 
-    if (!respuesta.ok) {
-        throw new Error(datos.mensaje || 'No se pudieron cargar los estudiantes')
+    const ordenados = ordenarEstudiantes(filtrados, orden, direccion)
+    const totalRegistros = ordenados.length
+    const totalPaginas = Math.ceil(totalRegistros / limite)
+    const inicio = (pagina - 1) * limite
+
+    return {
+        datos: ordenados.slice(inicio, inicio + limite),
+        totalRegistros,
+        pagina,
+        limite,
+        totalPaginas
     }
-
-    return datos
 }
 
-// Obtener un estudiante por su ID
 export async function obtenerEstudiantePorId(id) {
-    const respuesta = await fetch(`${API_URL}/${id}`)
-    const datos = await respuesta.json()
+    const estudiante = estudiantes.find(
+        e => e.id_estudiante === Number(id)
+    )
 
-    if (!respuesta.ok) {
-        throw new Error(datos.mensaje || 'No se pudo cargar el estudiante')
+    if (!estudiante) {
+        throw new Error('No se encontró el estudiante')
     }
 
-    return datos
+    return { ...estudiante }
 }
 
-// Crear un estudiante
 export async function crearEstudiante(estudiante) {
-    const respuesta = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(estudiante)
-    })
-
-    const datos = await respuesta.json()
-
-    if (!respuesta.ok) {
-        throw new Error(datos.mensaje || 'No se pudo crear el estudiante')
+    const nuevoEstudiante = {
+        ...estudiante,
+        id_estudiante: siguienteId++
     }
 
-    return datos
+    delete nuevoEstudiante.password
+
+    estudiantes.push(nuevoEstudiante)
+
+    return {
+        mensaje: 'Estudiante creado correctamente en la simulación',
+        estudiante: { ...nuevoEstudiante }
+    }
 }
 
-// Actualizar un estudiante
-export async function actualizarEstudiante(id, estudiante, token) {
-    const respuesta = await fetch(`${API_URL}/${id}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(estudiante)
-    })
+export async function actualizarEstudiante(id, estudiante) {
+    const indice = estudiantes.findIndex(
+        e => e.id_estudiante === Number(id)
+    )
 
-    const datos = await respuesta.json()
-
-    if (!respuesta.ok) {
-        throw new Error(datos.mensaje || 'No se pudo actualizar el estudiante')
+    if (indice === -1) {
+        throw new Error('No se encontró el estudiante')
     }
 
-    return datos
+    const actualizado = {
+        ...estudiantes[indice],
+        ...estudiante,
+        id_estudiante: Number(id)
+    }
+
+    delete actualizado.password
+
+    estudiantes[indice] = actualizado
+
+    return {
+        mensaje: 'Estudiante actualizado correctamente en la simulación',
+        estudiante: { ...actualizado }
+    }
 }
 
-// Eliminar un estudiante
-export async function eliminarEstudiante(id, token) {
-    const respuesta = await fetch(`${API_URL}/${id}`, {
-        method: 'DELETE',
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
-    })
+export async function eliminarEstudiante(id) {
+    const existe = estudiantes.some(
+        e => e.id_estudiante === Number(id)
+    )
 
-    const datos = await respuesta.json()
-
-    if (!respuesta.ok) {
-        throw new Error(datos.mensaje || 'No se pudo eliminar el estudiante')
+    if (!existe) {
+        throw new Error('No se encontró el estudiante')
     }
 
-    return datos
+    estudiantes = estudiantes.filter(
+        e => e.id_estudiante !== Number(id)
+    )
+
+    return {
+        mensaje: 'Estudiante eliminado correctamente de la simulación'
+    }
 }
