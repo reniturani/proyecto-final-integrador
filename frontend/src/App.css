@@ -211,3 +211,132 @@
   margin-left: auto;
   margin-right: auto;
 }
+
+/*registro*/
+
+/* Registro de estudiante */
+.registro-pagina {
+  width: 100%;
+  min-height: 70vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+  box-sizing: border-box;
+}
+
+.registro-tarjeta {
+  width: 100%;
+  max-width: 520px;
+  padding: 36px;
+  background: #fffdf8;
+  border: 1px solid #e7e6dc;
+  border-radius: 18px;
+  box-shadow: 0 8px 30px rgba(30, 55, 0, 0.08);
+  box-sizing: border-box;
+}
+
+.registro-titulo {
+  margin: 0 0 12px;
+  color: #1d3600;
+  font-size: clamp(28px, 4vw, 36px);
+  line-height: 1.2;
+  text-align: center;
+}
+
+.registro-descripcion {
+  margin: 0 0 28px;
+  color: #526044;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.registro-formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.registro-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.registro-campo label {
+  color: #243b0b;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.registro-campo input {
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 14px;
+  border: 1px solid #cbd2c1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #243b0b;
+  font: inherit;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.registro-campo input:focus {
+  border-color: #244500;
+  box-shadow: 0 0 0 3px rgba(36, 69, 0, 0.12);
+}
+
+.registro-boton {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 4px;
+}
+
+.registro-pie {
+  margin: 4px 0 0;
+  color: #526044;
+  text-align: center;
+  font-size: 14px;
+}
+
+.registro-enlace {
+  margin-left: 5px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #244500;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.registro-error,
+.registro-exito {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.registro-error {
+  background: #fff0ed;
+  color: #a52818;
+}
+
+.registro-exito {
+  background: #e9f7df;
+  color: #244500;
+}
+
+@media (max-width: 600px) {
+  .registro-pagina {
+    padding: 24px 14px;
+  }
+
+  .registro-tarjeta {
+    padding: 24px 20px;
+  }
+}

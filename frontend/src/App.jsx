@@ -7,6 +7,8 @@ import MiPerfil from './pages/Miperfil'
 import Profesores from './pages/Profesores'
 import Materias from './pages/Materias'
 import Estudiantes from './pages/Estudiantes'
+import RegistroEstudiante from './pages/RegistroEstudiante'
+
 import './App.css'
 
 function App() {
@@ -27,7 +29,7 @@ function App() {
         
         {/* estas dos rutas las va a crear mai despues pero ya las dejo preparadas  */}
         {paginaActual === 'Registro Profesor' && <div>Componente de Registro Profesor (Mai)</div>}
-        {paginaActual === 'Registro Estudiante' && <div>Componente de Registro Estudiante (Mai)</div>}
+        {paginaActual === 'Registro Estudiante' && (<RegistroEstudiante onNavegar={setPaginaActual} />)}       
 
         
         {paginaActual === 'Aprender' && <Aprender />}
