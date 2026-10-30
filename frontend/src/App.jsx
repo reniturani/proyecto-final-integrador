@@ -8,7 +8,7 @@ import Profesores from './pages/Profesores'
 import Materias from './pages/Materias'
 import Estudiantes from './pages/Estudiantes'
 import RegistroEstudiante from './pages/RegistroEstudiante'
-
+import RegistroProfesor from './pages/RegistroProfesor'
 import './App.css'
 
 function App() {
@@ -27,11 +27,8 @@ function App() {
         {paginaActual === 'Bienvenida' && <Bienvenida onNavegar={setPaginaActual} />}
         {paginaActual === 'Login' && <Login onNavegar={setPaginaActual} />}
         
-        {/* estas dos rutas las va a crear mai despues pero ya las dejo preparadas  */}
-        {paginaActual === 'Registro Profesor' && <div>Componente de Registro Profesor (Mai)</div>}
+        {paginaActual === 'Registro Profesor' && (<RegistroProfesor onNavegar={setPaginaActual} />)}        
         {paginaActual === 'Registro Estudiante' && (<RegistroEstudiante onNavegar={setPaginaActual} />)}       
-
-        
         {paginaActual === 'Aprender' && <Aprender />}
         {paginaActual === 'Mi perfil' && <MiPerfil />}
         {paginaActual === 'Profesores' && <Profesores />}
