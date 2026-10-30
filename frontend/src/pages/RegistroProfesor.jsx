@@ -1,4 +1,3 @@
-
 import { useState } from 'react'
 
 function RegistroProfesor({ onNavegar }) {
@@ -39,29 +38,33 @@ function RegistroProfesor({ onNavegar }) {
       return
     }
 
-    setMensaje('¡Registro de profesor completado correctamente!')
-
-    setFormulario({
-      nombre: '',
-      apellido: '',
-      email: '',
-      password: '',
-      confirmarPassword: '',
-      materias: '',
-      presentacion: ''
+    // Enviamos los datos del profesor a App.jsx.
+    // La contraseña no se comparte con el perfil.
+    onNavegar('Mi perfil', {
+      nombre: formulario.nombre,
+      apellido: formulario.apellido,
+      email: formulario.email,
+      materias: formulario.materias,
+      presentacion: formulario.presentacion,
+      rol: 'profesor'
     })
   }
 
   return (
     <div className="registro-pagina">
       <div className="registro-tarjeta">
-        <h1 className="registro-titulo">Crear cuenta de profesor</h1>
+        <h1 className="registro-titulo">
+          Crear cuenta de profesor
+        </h1>
 
         <p className="registro-descripcion">
           Compartí tus conocimientos y conectá con nuevos estudiantes.
         </p>
 
-        <form className="registro-formulario" onSubmit={manejarEnvio}>
+        <form
+          className="registro-formulario"
+          onSubmit={manejarEnvio}
+        >
           <div className="registro-campo">
             <label htmlFor="nombre">Nombre</label>
             <input
@@ -115,7 +118,9 @@ function RegistroProfesor({ onNavegar }) {
           </div>
 
           <div className="registro-campo">
-            <label htmlFor="presentacion">Presentación profesional</label>
+            <label htmlFor="presentacion">
+              Presentación profesional
+            </label>
             <textarea
               id="presentacion"
               name="presentacion"
@@ -143,7 +148,9 @@ function RegistroProfesor({ onNavegar }) {
           </div>
 
           <div className="registro-campo">
-            <label htmlFor="confirmarPassword">Confirmar contraseña</label>
+            <label htmlFor="confirmarPassword">
+              Confirmar contraseña
+            </label>
             <input
               id="confirmarPassword"
               name="confirmarPassword"
@@ -157,19 +164,26 @@ function RegistroProfesor({ onNavegar }) {
           </div>
 
           {error && (
-            <p className="registro-error" role="alert">{error}</p>
+            <p className="registro-error" role="alert">
+              {error}
+            </p>
           )}
 
           {mensaje && (
-            <p className="registro-exito" role="status">{mensaje}</p>
+            <p className="registro-exito" role="status">
+              {mensaje}
+            </p>
           )}
 
-          <button type="submit" className="btn-primario registro-boton">
+          <button
+            type="submit"
+            className="btn-primario registro-boton"
+          >
             Crear cuenta de profesor
           </button>
 
           <p className="registro-pie">
-            ¿Ya tenés una cuenta?
+            ¿Ya tenés una cuenta?{' '}
             <button
               type="button"
               className="registro-enlace"

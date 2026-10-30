@@ -1,20 +1,31 @@
+import { useEffect, useState } from 'react'
 
-
-//perfil de estudiante
-
-import { useState } from 'react'
-
-function MiPerfil() {
+function MiPerfil({ perfilInicial }) {
   const [editando, setEditando] = useState(false)
   const [mensaje, setMensaje] = useState('')
-  const [perfil, setPerfil] = useState({
-    nombre: 'Juana',
-    apellido: 'Martinez',
-    email: 'juana.martnz@example.com',
-    materias: 'Programación, Matemática',
-    presentacion: 'Me interesa aprender nuevas habilidades y seguir creciendo académicamente.'
-  })
+
+  const [perfil, setPerfil] = useState(() => ({
+    nombre: perfilInicial?.nombre || '',
+    apellido: perfilInicial?.apellido || '',
+    email: perfilInicial?.email || '',
+    materias: perfilInicial?.materias || '',
+    presentacion: perfilInicial?.presentacion || ''
+  }))
+
   const [formulario, setFormulario] = useState(perfil)
+
+  useEffect(() => {
+    const nuevoPerfil = {
+      nombre: perfilInicial?.nombre || '',
+      apellido: perfilInicial?.apellido || '',
+      email: perfilInicial?.email || '',
+      materias: perfilInicial?.materias || '',
+      presentacion: perfilInicial?.presentacion || ''
+    }
+
+    setPerfil(nuevoPerfil)
+    setFormulario(nuevoPerfil)
+  }, [perfilInicial])
 
   const manejarCambio = (e) => {
     const { name, value } = e.target
@@ -41,7 +52,9 @@ function MiPerfil() {
     setMensaje('')
   }
 
-  const iniciales = `${perfil.nombre.charAt(0)}${perfil.apellido.charAt(0)}`.toUpperCase()
+  const iniciales = (
+    `${perfil.nombre.charAt(0)}${perfil.apellido.charAt(0)}`
+  ).toUpperCase()
 
   return (
     <div className="perfil-pagina">
@@ -49,7 +62,9 @@ function MiPerfil() {
         <header className="perfil-encabezado">
           <div>
             <span className="perfil-etiqueta">MI CUENTA</span>
+
             <h1 className="perfil-titulo">Mi perfil</h1>
+
             <p className="perfil-subtitulo">
               Administrá tu información personal y tus intereses de aprendizaje.
             </p>
@@ -78,23 +93,33 @@ function MiPerfil() {
 
         <section className="perfil-tarjeta">
           <div className="perfil-resumen">
-            <div className="perfil-avatar">{iniciales}</div>
+            <div className="perfil-avatar">
+              {iniciales || '?'}
+            </div>
 
             <div className="perfil-resumen-info">
-              <h2>{perfil.nombre} {perfil.apellido}</h2>
+              <h2>
+                {perfil.nombre} {perfil.apellido}
+              </h2>
+
               <p>{perfil.email}</p>
+
               <span className="perfil-rol">Estudiante</span>
             </div>
           </div>
 
           <div className="perfil-separador" />
 
-          <form className="perfil-formulario" onSubmit={guardarCambios}>
+          <form
+            className="perfil-formulario"
+            onSubmit={guardarCambios}
+          >
             <h3>Información personal</h3>
 
             <div className="perfil-grid">
               <div className="registro-campo">
                 <label htmlFor="perfil-nombre">Nombre</label>
+
                 <input
                   id="perfil-nombre"
                   name="nombre"
@@ -107,6 +132,7 @@ function MiPerfil() {
 
               <div className="registro-campo">
                 <label htmlFor="perfil-apellido">Apellido</label>
+
                 <input
                   id="perfil-apellido"
                   name="apellido"
@@ -118,7 +144,10 @@ function MiPerfil() {
               </div>
 
               <div className="registro-campo perfil-campo-completo">
-                <label htmlFor="perfil-email">Correo electrónico</label>
+                <label htmlFor="perfil-email">
+                  Correo electrónico
+                </label>
+
                 <input
                   id="perfil-email"
                   name="email"
@@ -131,7 +160,10 @@ function MiPerfil() {
               </div>
 
               <div className="registro-campo perfil-campo-completo">
-                <label htmlFor="perfil-materias">Materias que te interesa aprender</label>
+                <label htmlFor="perfil-materias">
+                  Materias que te interesa aprender
+                </label>
+
                 <input
                   id="perfil-materias"
                   name="materias"
@@ -143,7 +175,10 @@ function MiPerfil() {
               </div>
 
               <div className="registro-campo perfil-campo-completo">
-                <label htmlFor="perfil-presentacion">Sobre mí</label>
+                <label htmlFor="perfil-presentacion">
+                  Sobre mí
+                </label>
+
                 <textarea
                   id="perfil-presentacion"
                   name="presentacion"
@@ -166,7 +201,10 @@ function MiPerfil() {
                   Cancelar
                 </button>
 
-                <button type="submit" className="btn-primario">
+                <button
+                  type="submit"
+                  className="btn-primario"
+                >
                   Guardar cambios
                 </button>
               </div>
@@ -175,8 +213,8 @@ function MiPerfil() {
         </section>
 
         <p className="perfil-nota">
-          Los datos mostrados son de prueba. Los cambios se mantienen mientras
-          la aplicación siga abierta, pero todavía no se guardan permanentemente.
+          Los cambios se mantienen temporalmente mientras la aplicación
+          está abierta. Todavía no se guardan permanentemente.
         </p>
       </div>
     </div>

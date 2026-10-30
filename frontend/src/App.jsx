@@ -7,8 +7,10 @@ import MiPerfil from './pages/Miperfil'
 import Profesores from './pages/Profesores'
 import Materias from './pages/Materias'
 import Estudiantes from './pages/Estudiantes'
-import RegistroEstudiante from './pages/RegistroEstudiante'
-import RegistroProfesor from './pages/RegistroProfesor'
+import RegistroEstudiante from './pages/RegistroEstudiante.jsx' 
+import RegistroProfesor from './pages/RegistroProfesor.jsx'
+
+
 import './App.css'
 
 function App() {
@@ -27,8 +29,8 @@ function App() {
         {paginaActual === 'Bienvenida' && <Bienvenida onNavegar={setPaginaActual} />}
         {paginaActual === 'Login' && <Login onNavegar={setPaginaActual} />}
         
-        {paginaActual === 'Registro Profesor' && (<RegistroProfesor onNavegar={setPaginaActual} />)}        
-        {paginaActual === 'Registro Estudiante' && (<RegistroEstudiante onNavegar={setPaginaActual} />)}       
+        {paginaActual === 'Registro Profesor' && (<RegistroProfesor onNavegar={setPaginaActual} />)}
+        {paginaActual === 'Registro Estudiante' && (<RegistroEstudiante onNavegar={setPaginaActual} />)}
         {paginaActual === 'Aprender' && <Aprender />}
         {paginaActual === 'Mi perfil' && <MiPerfil />}
         {paginaActual === 'Profesores' && <Profesores />}
