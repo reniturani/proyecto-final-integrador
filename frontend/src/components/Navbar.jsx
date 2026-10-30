@@ -1,13 +1,22 @@
 const opciones = [
-    { nombre: 'Inicio', ruta: '/inicio' },
-    { nombre: 'Aprender', ruta: '/aprender' },
-    { nombre: 'Mi perfil', ruta: '/mi-perfil' },
-    { nombre: 'Profesores', ruta: '/profesores' },
-    { nombre: 'Materias', ruta: '/materias' },
-    { nombre: 'Estudiantes', ruta: '/estudiantes' },
+    { nombre: 'Bienvenida', ruta: '/Bienvenida', requiereAdmin: false },
+    { nombre: 'Aprender', ruta: '/aprender', requiereAdmin: false },
+    { nombre: 'Mi perfil', ruta: '/mi-perfil', requiereAdmin: false },
+    { nombre: 'Profesores', ruta: '/profesores', requiereAdmin: true },
+    { nombre: 'Materias', ruta: '/materias', requiereAdmin: true },
+    { nombre: 'Estudiantes', ruta: '/estudiantes', requiereAdmin: true },
 ]
 
 function Navbar({ onNavegar, menuAbierto, setMenuAbierto }) {
+    // 1. lee que rol tiene el usuario guardado en el navegador
+    const rolUsuario = localStorage.getItem('usuarioRol')
+    // 2. filtra las opciones segun el rol del usuario
+    const opcionesVisibles = opciones.filter((opcion) => {
+    if (opcion.requiereAdmin) {
+      return rolUsuario === 'administrador' // solo pasa si es admin
+    }
+    return true // si no requiere admin, la ven todos
+    })
     return (
     <header className="navbar">
         <button
@@ -16,12 +25,13 @@ function Navbar({ onNavegar, menuAbierto, setMenuAbierto }) {
         onClick={() => setMenuAbierto(!menuAbierto)}
         aria-expanded={menuAbierto}
         >
-        {menuAbierto ? 'Cerrar ✕' : 'Menú ☰'}
+        {menuAbierto ? '✕' : '☰'}
         </button>
         
         {menuAbierto && (
         <nav className="navbar-dropdown">
-            {opciones.map((opcion) => (
+            {/* 3. Mapeamos solo las opciones que pasaron el filtro */}
+            {opcionesVisibles.map((opcion) => (
             <a
             key={opcion.ruta}
             href="#"

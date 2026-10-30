@@ -1,4 +1,3 @@
-
 const jwt = require('jsonwebtoken');
 
 const verificarToken = (req, res, next) => {
@@ -28,4 +27,18 @@ const verificarToken = (req, res, next) => {
     }
 };
 
-module.exports = { verificarToken };
+// Comprueba que el usuario autenticado sea administrador
+const verificarAdministrador = (req, res, next) => {
+    if (!req.usuario || req.usuario.tipo !== 'administrador') {
+        return res.status(403).json({
+            mensaje: 'Acceso denegado: solo el administrador puede realizar esta acción'
+        });
+    }
+
+    next();
+};
+
+module.exports = {
+    verificarToken,
+    verificarAdministrador
+};

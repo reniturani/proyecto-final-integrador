@@ -49,7 +49,7 @@
   left: 0;
   z-index: 11;
 
-  width: 280px;
+  width: 240px;
   padding: 100px 24px 32px;
 
   display: flex;
@@ -76,15 +76,15 @@
   background: var(--color-mint);
 }
 
-/* Contenido principal: se desplaza al abrir el menú */
+/* contenido principal: se desplaza al abrir el menu */
 .contenido-principal {
   min-height: 100vh;
-  margin-left: 0;
+  margin-left: 16px;
   transition: margin-left 0.3s ease;
 }
 
 .app.menu-abierto .contenido-principal {
-  margin-left: 280px;
+  margin-left: 240px;
 }
 
 /* Contenido general de las páginas */
@@ -108,7 +108,7 @@
   -webkit-box-decoration-break: clone;
 }
 
-/* Adaptación general a pantallas pequeñas */
+/* adaptacion general a pantallas pequeñas */
 @media (max-width: 700px) {
   .navbar-menu-button {
     top: 16px;
@@ -127,4 +127,87 @@
     width: calc(100% - 32px);
     margin: 88px auto 40px;
   }
+}
+
+/* botones de bienvenida y login */
+.botones-bienvenida {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.btn-primario {
+  background: var(--color-primary);
+  color: var(--color-background);
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--radius-button);
+  font-weight: 600;
+  font-size: 16px;
+  transition: opacity 0.2s;
+}
+
+.btn-primario:hover {
+  opacity: 0.85;
+}
+
+.btn-secundario {
+  background: var(--color-mint);
+  color: var(--color-primary);
+  padding: 12px 24px;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-button);
+  font-weight: 600;
+  font-size: 16px;
+  transition: background 0.2s;
+}
+
+.btn-secundario:hover {
+  background: var(--color-teal);
+}
+
+/* formularios */
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 400px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.input-group label {
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.input-group input {
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-button);
+  font-size: 16px;
+  background: var(--color-background);
+}
+
+/* centrado para pantallas de inicio y login */
+.pantalla-centrada {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 80vh;
+}
+
+.pantalla-centrada .botones-bienvenida {
+  justify-content: center;
+}
+
+.pantalla-centrada .page-title {
+  margin-left: auto;
+  margin-right: auto;
 }
