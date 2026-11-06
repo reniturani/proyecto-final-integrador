@@ -10,7 +10,7 @@ import Estudiantes from './pages/Estudiantes'
 import RegistroEstudiante from './pages/RegistroEstudiante.jsx' 
 import RegistroProfesor from './pages/RegistroProfesor.jsx'
 import QuienesSomos from './pages/QuienesSomos'
-
+import Footer from './components/Footer'
 
 import './App.css'
 
@@ -38,6 +38,7 @@ function App() {
         {paginaActual === 'Profesores' && <Profesores />}
         {paginaActual === 'Materias' && <Materias />}
         {paginaActual === 'Estudiantes' && <Estudiantes />}
+        <Footer onNavegar={setPaginaActual} />
       </div>
     </div>
   )

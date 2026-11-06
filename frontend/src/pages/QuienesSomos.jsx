@@ -29,7 +29,6 @@ function QuienesSomos() {
         {/* mision y vision */}
         <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', marginBottom: '60px' }}>
             <div style={{ flex: '1', minWidth: '300px', background: 'var(--color-background)', border: '1px solid var(--color-border)', borderRadius: '18px', padding: '40px' }}>
-            {/* Detalle visual minimalista en lugar de emoji */}
             <div style={{ width: '48px', height: '6px', background: 'var(--color-primary)', borderRadius: '4px', marginBottom: '24px' }}></div>
             <h4 style={{ margin: '0 0 16px', fontSize: '26px', color: 'var(--color-primary)' }}>Nuestra misión</h4>
             <p style={{ margin: 0, color: 'var(--color-text)', lineHeight: '1.6', fontSize: '18px' }}>
@@ -47,7 +46,7 @@ function QuienesSomos() {
         </div>
 
         {/* como funciona*/}
-        <div style={{ marginBottom: '60px' }}>
+            <div id="como-funciona" style={{ marginBottom: '60px', scrollMarginTop: '40px' }}>
             <h4 style={{ textAlign: 'center', fontSize: '32px', color: 'var(--color-primary)', margin: '0 0 50px' }}>¿Cómo funciona Profy?</h4>
             <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
             
