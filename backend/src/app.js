@@ -10,6 +10,7 @@ const materiaRoutes = require('./routes/materias.routes');
 const profesorMateriaRoutes = require('./routes/profesorMateria.routes');
 const estudianteRoutes = require('./routes/estudiante.routes');
 const authRoutes = require('./routes/auth.routes'); 
+const passwordResetRoutes = require('./routes/passwordReset.routes');
 
 const app = express();
 app.use(express.json());
@@ -20,6 +21,7 @@ app.use('/api/materias', materiaRoutes);
 app.use('/api', profesorMateriaRoutes);
 app.use('/api/estudiantes', estudianteRoutes);
 app.use('/api/auth', authRoutes); 
+app.use('/api/auth', passwordResetRoutes);
 
 app.get('/', (req, res) => {
     res.send('Backend funcionando');
