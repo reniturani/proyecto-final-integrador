@@ -1,8 +1,8 @@
 
 import { useState } from 'react'
 
-function RestablecerPassword({ onNavegar }) {
-  const [token, setToken] = useState('')
+function RestablecerPassword({ onNavegar, tokenRecuperacion }) {
+  const [token, setToken] = useState(tokenRecuperacion || '')
   const [nuevaPassword, setNuevaPassword] = useState('')
   const [confirmarPassword, setConfirmarPassword] = useState('')
   const [error, setError] = useState('')
@@ -66,7 +66,9 @@ function RestablecerPassword({ onNavegar }) {
         Nueva <span className="highlight">contraseña</span>
       </h1>
 
-      <form className="formulario" onSubmit={handleSubmit}>
+      <form className="formulario" 
+      onSubmit={handleSubmit}
+      autoComplete = "off">
         <p>
           Ingresá el token que recibiste y elegí tu nueva contraseña.
         </p>
@@ -102,7 +104,9 @@ function RestablecerPassword({ onNavegar }) {
             placeholder="Pegá tu token"
             value={token}
             onChange={(e) => setToken(e.target.value)}
+            autoComplete="off"
             required
+
           />
         </div>
 
@@ -114,6 +118,7 @@ function RestablecerPassword({ onNavegar }) {
             value={nuevaPassword}
             onChange={(e) => setNuevaPassword(e.target.value)}
             minLength={8}
+            autoComplete="new-password"
             required
           />
         </div>
@@ -125,6 +130,7 @@ function RestablecerPassword({ onNavegar }) {
             placeholder="Repetí tu contraseña"
             value={confirmarPassword}
             onChange={(e) => setConfirmarPassword(e.target.value)}
+            autoComplete="new-password"
             required
           />
         </div>

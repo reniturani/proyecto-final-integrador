@@ -1,7 +1,7 @@
 
 import { useState } from 'react'
 
-function RecuperarPassword({ onNavegar }) {
+function RecuperarPassword({ onNavegar, setTokenRecuperacion }) {
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
   const [mensaje, setMensaje] = useState('')
@@ -36,6 +36,7 @@ function RecuperarPassword({ onNavegar }) {
 
       setMensaje(datos.mensaje)
       setToken(datos.token || '')
+      setTokenRecuperacion(datos.token || '')
 
     } catch (err) {
       setError(err.message)
@@ -111,7 +112,18 @@ function RecuperarPassword({ onNavegar }) {
               Guardá este token para utilizarlo en el siguiente paso.
             </small>
           </div>
+          
         )}
+        {token && (
+  <button
+    type="button"
+    className="btn-primario"
+    onClick={() => onNavegar('Restablecer contraseña')}
+    style={{ marginTop: '12px' }}
+  >
+    Continuar
+  </button>
+)}
 
         <div style={{ textAlign: 'center', marginTop: '16px' }}>
           <button
