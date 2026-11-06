@@ -91,6 +91,17 @@
             />
             </div>
 
+            {/*enlace para recuperar la contraseña*/} 
+            <div style={{ textAlign: 'right', marginTop: '10px' }}>
+            <button
+                type="button"
+                className="registro-enlace"
+                onClick={() => onNavegar('Recuperar contraseña')}
+            >
+            ¿Olvidaste tu contraseña? 
+                </button>
+            </div>
+
             <button type="submit" className="btn-primario" disabled={cargando} style={{ marginTop: '16px' }}>
             {cargando ? 'Ingresando...' : 'Ingresar'}
             </button>
