@@ -11,6 +11,7 @@ import RegistroEstudiante from './pages/RegistroEstudiante.jsx'
 import RegistroProfesor from './pages/RegistroProfesor.jsx'
 import QuienesSomos from './pages/QuienesSomos'
 import Footer from './components/Footer'
+import RecuperarPassword from './pages/RecuperarPassword'
 
 import './App.css'
 
@@ -33,6 +34,7 @@ function App() {
         
         {paginaActual === 'Registro Profesor' && (<RegistroProfesor onNavegar={setPaginaActual} />)}
         {paginaActual === 'Registro Estudiante' && (<RegistroEstudiante onNavegar={setPaginaActual} />)}
+        {paginaActual === 'Recuperar contraseña' && (<RecuperarPassword onNavegar={setPaginaActual} />)}
         {paginaActual === 'Aprender' && <Aprender />}
         {paginaActual === 'Mi perfil' && <MiPerfil />}
         {paginaActual === 'Profesores' && <Profesores />}
