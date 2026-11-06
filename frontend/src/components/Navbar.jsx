@@ -1,7 +1,8 @@
 const opciones = [
-    { nombre: 'Bienvenida', ruta: '/Bienvenida', requiereAdmin: false },
+    { nombre: 'Bienvenida', ruta: '/Bienvenida', requiereAdmin: false, ocultarSiLogueado: true },
     { nombre: 'Aprender', ruta: '/aprender', requiereAdmin: false },
-    { nombre: 'Mi perfil', ruta: '/mi-perfil', requiereAdmin: false },
+    { nombre: 'Quiénes somos', ruta: '/quienes-somos', requiereAdmin: false },
+    { nombre: 'Mi perfil', ruta: '/mi-perfil', requiereAdmin: false, requiereLogin: true },
     { nombre: 'Profesores', ruta: '/profesores', requiereAdmin: true },
     { nombre: 'Materias', ruta: '/materias', requiereAdmin: true },
     { nombre: 'Estudiantes', ruta: '/estudiantes', requiereAdmin: true },
@@ -12,6 +13,10 @@ function Navbar({ onNavegar, menuAbierto, setMenuAbierto }) {
     const rolUsuario = localStorage.getItem('usuarioRol')
     // 2. filtra las opciones segun el rol del usuario
     const opcionesVisibles = opciones.filter((opcion) => {
+    if (opcion.ocultarSiLogueado && rolUsuario) {
+            return false
+        }
+    if (opcion.requiereLogin && !rolUsuario) return false
     if (opcion.requiereAdmin) {
       return rolUsuario === 'administrador' // solo pasa si es admin
     }
@@ -90,12 +95,12 @@ function Navbar({ onNavegar, menuAbierto, setMenuAbierto }) {
             ) : (
             // si no esta logeado directo para ingresar/registrarse
             <button 
-                onClick={() => onNavegar('Bienvenida')}
-                className="btn-primario"
-                style={{ padding: '8px 20px', fontSize: '14px' }}
-            >
-                Ingresar a la plataforma
-            </button>
+            onClick={() => onNavegar('Login')} // ¡Acá hacemos el cambio!
+            className="btn-primario"
+            style={{ padding: '8px 20px', fontSize: '14px' }}
+        >
+            Ingresar a la plataforma
+        </button>
             )}
         </div>
 

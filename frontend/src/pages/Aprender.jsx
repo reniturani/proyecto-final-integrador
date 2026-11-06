@@ -53,7 +53,7 @@ function Aprender() {
         <main className="page-container">
             <section className="aprender-header">
                 <h1 className="page-title">
-                    ¿Qué quieres <span className="highlight">aprender?</span>
+                    ¿Qué queres <span className="highlight">aprender?</span>
                 </h1>
 
                 <p>Encontrá al profesor ideal para vos.</p>

@@ -9,7 +9,8 @@ import Materias from './pages/Materias'
 import Estudiantes from './pages/Estudiantes'
 import RegistroEstudiante from './pages/RegistroEstudiante.jsx' 
 import RegistroProfesor from './pages/RegistroProfesor.jsx'
-
+import QuienesSomos from './pages/QuienesSomos'
+import Footer from './components/Footer'
 
 import './App.css'
 
@@ -28,6 +29,7 @@ function App() {
       <div className="contenido-principal">
         {paginaActual === 'Bienvenida' && <Bienvenida onNavegar={setPaginaActual} />}
         {paginaActual === 'Login' && <Login onNavegar={setPaginaActual} />}
+        {paginaActual === 'Quiénes somos' && <QuienesSomos />}
         
         {paginaActual === 'Registro Profesor' && (<RegistroProfesor onNavegar={setPaginaActual} />)}
         {paginaActual === 'Registro Estudiante' && (<RegistroEstudiante onNavegar={setPaginaActual} />)}
@@ -36,6 +38,7 @@ function App() {
         {paginaActual === 'Profesores' && <Profesores />}
         {paginaActual === 'Materias' && <Materias />}
         {paginaActual === 'Estudiantes' && <Estudiantes />}
+        <Footer onNavegar={setPaginaActual} />
       </div>
     </div>
   )
