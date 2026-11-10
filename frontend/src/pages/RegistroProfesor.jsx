@@ -40,6 +40,8 @@ function RegistroProfesor({ onNavegar }) {
 
     // Enviamos los datos del profesor a App.jsx.
     // La contraseña no se comparte con el perfil.
+    localStorage.setItem('usuarioRol', 'profesor')
+
     onNavegar('Mi perfil', {
       nombre: formulario.nombre,
       apellido: formulario.apellido,
