@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-// import jsPDF from 'jspdf' // libreria para generar pdfs
+import jsPDF from 'jspdf' 
+import autoTable from 'jspdf-autotable'
 
     function Profesores() {
     // estados para los datos y la tabla
@@ -31,31 +32,31 @@ import { useState, useEffect } from 'react'
     ubicacion: ''
     })
 
-    // conexion con el backend (traer lista)
+    // conexion con el backend (traer lista real)
     const obtenerProfesores = async () => {
         setCargando(true)
         try {
-        let url = `http://localhost:3000/api/profesores?page=${paginaActual}&limit=${limite}&sortBy=${ordenarPor}&order=${direccionOrden}`
-        
-        if (busqueda) url += `&nombre=${busqueda}`
-        if (modalidadFiltro) url += `&modalidad=${modalidadFiltro}`
+            let url = `http://localhost:3000/api/profesores?page=${paginaActual}&limit=${limite}&sortBy=${ordenarPor}&order=${direccionOrden}`
+            
+            if (busqueda) url += `&nombre=${busqueda}`
+            if (modalidadFiltro) url += `&modalidad=${modalidadFiltro}`
 
-        const respuesta = await fetch(url)
-        const datos = await respuesta.json()
+            const respuesta = await fetch(url)
+            const datos = await respuesta.json()
 
-        if (respuesta.ok) {
-            setProfesores(datos.profesores)
-            setTotalRegistros(datos.totalRegistros)
-        } else {
+            if (respuesta.ok) {
+                setProfesores(datos.profesores)
+                setTotalRegistros(datos.totalRegistros)
+            } else {
+                setProfesores([])
+                setTotalRegistros(0)
+            }
+        } catch (error) {
+            console.error('Error al cargar profesores:', error)
             setProfesores([])
             setTotalRegistros(0)
-        }
-        } catch (error) {
-        console.error('Error al cargar profesores:', error)
-        setProfesores([])
-        setTotalRegistros(0)
         } finally {
-        setCargando(false)
+            setCargando(false)
         }
     }
 
@@ -69,35 +70,50 @@ import { useState, useEffect } from 'react'
 
     // generar PDF 
     const exportarPDF = () => {
-        const doc = new jsPDF()
-        
-        // titulo del documento
-        doc.setFontSize(18)
-        doc.text('Reporte de Profesores', 14, 20)
-        
-        // lista de texto simple con los datos cargados
-        doc.setFontSize(12)
-        let posicionY = 30
-        
-        if (profesores.length === 0) {
-        doc.text('No hay profesores para exportar.', 14, posicionY)
-        } else {
-        profesores.forEach((prof) => {
-            const texto = `ID: ${prof.id_profesor} | ${prof.nombre} ${prof.apellido} | ${prof.email} | Mod: ${prof.modalidad}`
-            doc.text(texto, 14, posicionY)
-            posicionY += 10
-            
-            // si llega al final de la hoja, crea una nueva
-            if (posicionY > 280) {
-            doc.addPage()
-            posicionY = 20
-            }
-        })
-        }
-        // descarga el archivo
-        doc.save('listado_profesores.pdf')
-    }
+        try {
+            const doc = new jsPDF()
 
+            doc.setFontSize(18)
+            doc.setTextColor(36, 69, 0)
+            doc.text('Profy - Reporte de Profesores', 14, 22)
+            
+            doc.setFontSize(10)
+            doc.setTextColor(100)
+            const fecha = new Date().toLocaleDateString('es-AR')
+            doc.text(`Generado el: ${fecha}`, 14, 30)
+
+            if (!profesores || profesores.length === 0) {
+                doc.text('No hay profesores registrados para exportar.', 14, 45)
+                doc.save('Profy_Listado_Profesores.pdf')
+                return
+            }
+
+            const columnas = ["ID", "Nombre Completo", "Email", "Modalidad", "Tarifa/Hora"]
+            const filas = profesores.map(prof => [
+                prof.id_profesor || '-',
+                `${prof.nombre || ''} ${prof.apellido || ''}`.trim() || 'Sin Nombre',
+                prof.email || '-',
+                prof.modalidad || 'Virtual',
+                `$${prof.precio_hora || 0}`
+            ])
+
+            autoTable(doc, {
+                startY: 38,
+                head: [columnas],
+                body: filas,
+                theme: 'grid',
+                headStyles: { fillColor: [36, 69, 0] },
+                alternateRowStyles: { fillColor: [245, 245, 245] },
+                styles: { fontSize: 10, cellPadding: 4 }
+            })
+            
+            doc.save(`Profy_Profesores_${fecha.replace(/\//g, '-')}.pdf`)
+        } catch (error) {
+            console.error('Error al generar PDF:', error)
+            alert('Hubo un problema al generar el archivo PDF.')
+        }
+    }
+    
     // manejo del formulario (abrir y cargar datos)
     const abrirFormularioCrear = () => {
         setProfesorEditando(null)
