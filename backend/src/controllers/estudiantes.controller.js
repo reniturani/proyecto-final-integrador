@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const bycrypt = require('bcrypt');
+const bcrypt = require('bcrypt');
 const Estudiante  = require('../models/estudiantes.js');
 
 //GET obtener todos los estudiantes 

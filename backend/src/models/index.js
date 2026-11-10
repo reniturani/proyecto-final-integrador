@@ -2,6 +2,7 @@ const Estudiante = require('./estudiantes');
 const Profesor = require('./profesores');
 const Materia = require('./materias');
 const ProfesorMateria = require('./profesorMateria');
+const PasswordReset = require('./passwordReset');
 
 // definicion de relaciones 
 Profesor.belongsToMany(Materia, {
@@ -22,5 +23,6 @@ module.exports = {
     Estudiante,
     Profesor,
     Materia,
-    ProfesorMateria
+    ProfesorMateria,
+    PasswordReset
 };
