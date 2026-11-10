@@ -1,596 +1,407 @@
-import { useEffect, useState } from 'react'
-import {
-    obtenerMaterias,
-    obtenerMateriaPorId,
-    actualizarMateria,
-    eliminarMateria
-} from '../services/materias'
-import { jsPDF } from 'jspdf'
+import { useState, useEffect } from 'react'
+import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
-import '../styles/materias.css'
-import '../App.css'
 
 function Materias() {
+    // estados para los datos y la tabla
     const [materias, setMaterias] = useState([])
-    const [buscar, setBuscar] = useState('')
-    const [pagina, setPagina] = useState(1)
-    const [limite, setLimite] = useState(10)
-    const [orden, setOrden] = useState('id_materia')
-    const [direccion, setDireccion] = useState('ASC')
-
     const [totalRegistros, setTotalRegistros] = useState(0)
-    const [totalPaginas, setTotalPaginas] = useState(0)
     const [cargando, setCargando] = useState(true)
-    const [error, setError] = useState('')
-    const [intento, setIntento] = useState(0)
 
-    const [mostrarDetalle, setMostrarDetalle] = useState(false)
-    const [materiaDetalle, setMateriaDetalle] = useState(null)
-    const [idMateriaSeleccionada, setIdMateriaSeleccionada] = useState(null)
-    const [cargandoDetalle, setCargandoDetalle] = useState(false)
-    const [errorDetalle, setErrorDetalle] = useState('')
+    // estados para paginacion, busqueda y filtros
+    const [busqueda, setBusqueda] = useState('')
+    const [paginaActual, setPaginaActual] = useState(1)
+    const [limite, setLimite] = useState(10)
+    const [ordenarPor, setOrdenarPor] = useState('id_materia')
+    const [direccionOrden, setDireccionOrden] = useState('ASC')
 
-    const [modoEdicion, setModoEdicion] = useState(false)
-    const [nombreEditado, setNombreEditado] = useState('')
-    const [descripcionEditada, setDescripcionEditada] = useState('')
-    const [guardando, setGuardando] = useState(false)
+    // estados para el formulario (crear/editar)
+    const [mostrarFormulario, setMostrarFormulario] = useState(false)
+    const [materiaEditando, setMateriaEditando] = useState(null)
+    const [errorFormulario, setErrorFormulario] = useState('')
 
-    useEffect(() => {
-        async function cargarMaterias() {
-            setCargando(true)
-            setError('')
+    const [formData, setFormData] = useState({
+        nombre: '',
+        descripcion: ''
+    })
 
-            try {
-                const datos = await obtenerMaterias({
-                    pagina,
-                    limite,
-                    buscar,
-                    orden,
-                    direccion
-                })
-
-                setMaterias(datos.datos || [])
-                setTotalRegistros(datos.totalRegistros)
-                setTotalPaginas(datos.totalPaginas)
-            } catch (error) {
-                console.error('Error al cargar materias:', error)
-                setError('No se pudieron cargar las materias. Intentá nuevamente.')
-                setMaterias([])
-                setTotalRegistros(0)
-                setTotalPaginas(0)
-            } finally {
-                setCargando(false)
-            }
-        }
-
-        cargarMaterias()
-    }, [pagina, limite, buscar, orden, direccion, intento])
-
-    function cambiarBusqueda(evento) {
-        setBuscar(evento.target.value)
-        setPagina(1)
-    }
-
-    function cambiarLimite(evento) {
-        setLimite(Number(evento.target.value))
-        setPagina(1)
-    }
-
-    function cambiarOrden(evento) {
-        setOrden(evento.target.value)
-        setPagina(1)
-    }
-
-    function cambiarDireccion(evento) {
-        setDireccion(evento.target.value)
-        setPagina(1)
-    }
-
-    async function cargarDetalle(id) {
-        setCargandoDetalle(true)
-        setErrorDetalle('')
-        setMateriaDetalle(null)
-
+    // estados adicionales para manejar los datos localmente
+    const [todasLasMaterias, setTodasLasMaterias] = useState([])
+    const obtenerMaterias = async () => {
+        setCargando(true)
         try {
-            const datos = await obtenerMateriaPorId(id)
-            const materia = datos.materia || datos
-            
-            setMateriaDetalle(materia)
-            setNombreEditado(materia.nombre || '')
-            setDescripcionEditada(materia.descripcion || '')
-            setModoEdicion(false)
-        } catch (error) {
-            console.error('Error al cargar el detalle de la materia:', error)
-            setErrorDetalle('No se pudo cargar la materia. Intentá nuevamente.')
-        } finally {
-            setCargandoDetalle(false)
-        }
-    }
+            const token = localStorage.getItem('token')
 
-    function verDetalle(id) {
-        setIdMateriaSeleccionada(id)
-        setMostrarDetalle(true)
-        cargarDetalle(id)
-    }
-
-    function volverAlListado() {
-        setMostrarDetalle(false)
-        setMateriaDetalle(null)
-        setErrorDetalle('')
-    }
-
-    const guardarCambios = async () => {
-    const nombre = nombreEditado.trim()
-    const descripcion = descripcionEditada.trim()
-
-    if (!nombre) {
-        setErrorDetalle('El nombre de la materia es obligatorio.')
-        return
-    }
-
-    setGuardando(true)
-    setErrorDetalle('')
-
-    try {
-        const token = localStorage.getItem('token')
-
-        if (!token) {
-            setErrorDetalle(
-                'Todavía no hay un token de sesión. El guardado se podrá probar cuando se conecte el login.'
-            )
-            return
-        }
-
-        const respuesta = await actualizarMateria(
-            idMateriaSeleccionada,
-            { nombre, descripcion },
-            token
-        )
-
-        const materiaActualizada =
-            respuesta.materia || respuesta
-
-        setMateriaDetalle(materiaActualizada)
-        setNombreEditado(materiaActualizada.nombre || '')
-        setDescripcionEditada(materiaActualizada.descripcion || '')
-        setModoEdicion(false)
-    } catch (error) {
-        setErrorDetalle(
-            error.message || 'No se pudieron guardar los cambios.'
-        )
-    } finally {
-        setGuardando(false)
-    }
-}
-
-    const confirmarEliminacion = async () => {
-    const confirmar = window.confirm(
-        `¿Estás segura de que querés eliminar la materia "${materiaDetalle.nombre}"?`
-    )
-
-    if (!confirmar) return
-
-    setErrorDetalle('')
-    setGuardando(true)
-
-    try {
-        const token = localStorage.getItem('token')
-
-        if (!token) {
-            setErrorDetalle(
-                'No hay un token de sesión. El login debe estar conectado para eliminar materias.'
-            )
-            return
-        }
-
-        await eliminarMateria(idMateriaSeleccionada, token)
-
-        setMostrarDetalle(false)
-        setMateriaDetalle(null)
-        setModoEdicion(false)
-        setPagina(1)
-        setIntento((anterior) => anterior + 1)
-    } catch (error) {
-        setErrorDetalle(
-            error.message || 'No se pudo eliminar la materia.'
-        )
-    } finally {
-        setGuardando(false)
-    }
-}
-
-const exportarPDF = async () => {
-    try {
-        let listaMaterias = []
-        let paginaActual = 1
-        let totalPaginasExportacion = 1
-
-        while (paginaActual <= totalPaginasExportacion) {
-            const datos = await obtenerMaterias({
-                pagina: paginaActual,
-                limite: 100,
-                buscar,
-                orden,
-                direccion
+            const respuesta = await fetch('http://localhost:3000/api/materias?limite=100&pagina=1', {
+                headers: { 'Authorization': `Bearer ${token}` }
             })
+            const datos = await respuesta.json()
 
-            const materiasPagina = datos.datos || []
+            if (respuesta.ok) {
+                setTodasLasMaterias(datos.datos || [])
+            } else {
+                setTodasLasMaterias([])
+            }
+        } catch (error) {
+            console.error('Error al cargar materias:', error)
+            setTodasLasMaterias([])
+        } finally {
+            setCargando(false)
+        }
+    }
 
-            listaMaterias = [...listaMaterias, ...materiasPagina]
+    // solo busca en el backend cuando entramos a la pagina o cuando guardamos/eliminamos algo
+    useEffect(() => {
+        obtenerMaterias()
+    }, [])
 
-            totalPaginasExportacion = datos.totalPaginas || 1
-            paginaActual++
+    // filtra tildes, ordena alfabeticamente y pagina la tabla
+    useEffect(() => {
+        let resultado = [...todasLasMaterias]
+
+        // Función para sacar tildes y mayúsculas
+        const normalizar = (texto) => {
+            if (!texto) return '';
+            return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
         }
 
-        if (listaMaterias.length === 0) {
-            alert('No hay materias para exportar.')
-            return
+        // busqueda
+        if (busqueda) {
+            const termino = normalizar(busqueda)
+            resultado = resultado.filter(mat => 
+                normalizar(mat.nombre).includes(termino) || 
+                normalizar(mat.descripcion).includes(termino)
+            )
         }
 
-        const documento = new jsPDF()
+        resultado.sort((a, b) => {
+            let valA = a[ordenarPor]
+            let valB = b[ordenarPor]
+            
+            if (typeof valA === 'string') valA = normalizar(valA)
+            if (typeof valB === 'string') valB = normalizar(valB)
 
-        documento.setFontSize(16)
-        documento.text('Listado completo de materias', 14, 15)
-
-        documento.setFontSize(10)
-        documento.text(`Total de materias: ${listaMaterias.length}`, 14, 23)
-
-        autoTable(documento, {
-            startY: 30,
-            head: [['ID', 'Nombre', 'Descripción']],
-            body: listaMaterias.map((materia) => [
-                materia.id_materia,
-                materia.nombre,
-                materia.descripcion || 'Sin descripción'
-            ]),
-            styles: {
-                fontSize: 9,
-                cellPadding: 3,
-                overflow: 'linebreak'
-            },
-            headStyles: {
-                fillColor: [50, 70, 100]
-            },
-            columnStyles: {
-                0: { cellWidth: 20 },
-                1: { cellWidth: 45 },
-                2: { cellWidth: 'auto' }
-            },
-            margin: { top: 15, right: 14, bottom: 15, left: 14 }
+            if (valA < valB) return direccionOrden === 'ASC' ? -1 : 1
+            if (valA > valB) return direccionOrden === 'ASC' ? 1 : -1
+            return 0
         })
 
-        documento.save('listado-completo-materias.pdf')
-    } catch (error) {
-        alert(error.message || 'No se pudo generar el PDF.')
+        setTotalRegistros(resultado.length)
+
+        // paginacion
+        const indiceInicio = (paginaActual - 1) * limite
+        const indiceFin = indiceInicio + limite
+        setMaterias(resultado.slice(indiceInicio, indiceFin))
+
+    }, [todasLasMaterias, busqueda, paginaActual, limite, ordenarPor, direccionOrden])
+
+    // generar PDF profesional
+    const exportarPDF = () => {
+        try {
+            const doc = new jsPDF()
+            
+            doc.setFontSize(18)
+            doc.setTextColor(36, 69, 0)
+            doc.text('Profy - Reporte de Materias', 14, 22)
+            
+            doc.setFontSize(10)
+            doc.setTextColor(100)
+            const fecha = new Date().toLocaleDateString('es-AR')
+            doc.text(`Generado el: ${fecha}`, 14, 30)
+
+            if (!materias || materias.length === 0) {
+                doc.text('No hay materias registradas para exportar.', 14, 45)
+                doc.save('Profy_Listado_Materias.pdf')
+                return
+            }
+
+            const columnas = ["ID", "Nombre de la Materia", "Descripción"]
+            const filas = materias.map(mat => [
+                mat.id_materia || '-',
+                mat.nombre || 'Sin Nombre',
+                mat.descripcion || 'Sin descripción'
+            ])
+
+            autoTable(doc, {
+                startY: 38,
+                head: [columnas],
+                body: filas,
+                theme: 'grid',
+                headStyles: { fillColor: [36, 69, 0] },
+                alternateRowStyles: { fillColor: [245, 245, 245] },
+                styles: { fontSize: 10, cellPadding: 4 }
+            })
+            
+            doc.save(`Profy_Materias_${fecha.replace(/\//g, '-')}.pdf`)
+        } catch (error) {
+            console.error('Error al generar PDF:', error)
+            alert('Hubo un problema al generar el archivo PDF.')
+        }
     }
-}
 
+    // manejo del formulario (abrir y cargar datos)
+    const abrirFormularioCrear = () => {
+        setMateriaEditando(null)
+        setFormData({ nombre: '', descripcion: '' })
+        setErrorFormulario('')
+        setMostrarFormulario(true)
+    }
 
-    if (mostrarDetalle) {
-        return (
-            <main className="page-container">
-                <button
-                    type="button"
-                    className="materias-boton secundario materias-volver"
-                    onClick={volverAlListado}
-                >
-                    ← Volver al listado
-                </button>
+    const abrirFormularioEditar = (materia) => {
+        setMateriaEditando(materia)
+        setFormData({
+            nombre: materia.nombre || '',
+            descripcion: materia.descripcion || ''
+        })
+        setErrorFormulario('')
+        setMostrarFormulario(true)
+    }
 
-                <section className="materias-header">
-                    <h1 className="page-title">
-                        Detalle de <span className="highlight">materia</span>
-                    </h1>
+    // enviar datos al backend (POST / PUT)
+    const guardarMateria = async (e) => {
+        e.preventDefault()
+        setErrorFormulario('')
 
-                    <p>Información completa de la materia seleccionada.</p>
-                </section>
+        const token = localStorage.getItem('token')
+        const url = materiaEditando 
+            ? `http://localhost:3000/api/materias/${materiaEditando.id_materia}`
+            : 'http://localhost:3000/api/materias'
+        
+        const method = materiaEditando ? 'PUT' : 'POST'
 
-                {cargandoDetalle && (
-                    <p className="materias-mensaje">
-                        Cargando detalle de la materia...
-                    </p>
-                )}
+        try {
+            const respuesta = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(formData)
+            })
 
-                {!cargandoDetalle && errorDetalle && (
-                    <div className="materias-mensaje materias-error">
-                        <p>{errorDetalle}</p>
+            const resultado = await respuesta.json()
 
-                        <button
-                            type="button"
-                            className="materias-boton"
-                            onClick={() => cargarDetalle(idMateriaSeleccionada)}
-                        >
-                            Reintentar
-                        </button>
-                    </div>
-                )}
+            if (!respuesta.ok) {
+                throw new Error(resultado.mensaje || 'Error al guardar los datos')
+            }
 
-                {!cargandoDetalle && !errorDetalle && materiaDetalle && (
-                    <section className="materia-detalle">
-                        <div className="materia-detalle-cabecera">
-                            <div className="materia-identificador">
-                                {materiaDetalle.id_materia}
-                            </div>
+            setMostrarFormulario(false)
+            obtenerMaterias() // recargar la tabla
+        } catch (err) {
+            setErrorFormulario(err.message)
+        }
+    }
 
-                            <div>
-                                {modoEdicion ? (
-                                    <input
-                                    type="text"
-                                    value={nombreEditado}
-                                    onChange={(e) => setNombreEditado(e.target.value)}
-                                    placeholder="Nombre de la materia"
-                                    />
-                                ) : (
-                                <h2>{materiaDetalle.nombre}</h2>
-                                )}
-                                
-                                <p>ID de materia: {materiaDetalle.id_materia}</p>
-                                </div>
-                        </div>
-                        
-                        <div className="materia-detalle-descripcion">
-                            <h3>Descripción</h3>
-                            
-                            {modoEdicion ? (
-                                <textarea
-                                    value={descripcionEditada}
-                                    onChange={(e) => setDescripcionEditada(e.target.value)}
-                                    placeholder="Descripción de la materia"
-                                    rows={4}
-                                />
-                            ) : (
-                            <p>{materiaDetalle.descripcion || 'Sin descripción'}</p>
-                            )}
-                            </div>
+    // eliminar (DELETE)
+    const eliminarMateria = async (id) => {
+        if (!window.confirm('¿Estás segura de que querés eliminar esta materia de forma permanente?')) return
 
-                        <div className="materias-acciones">
-                            {!modoEdicion ? (
-                                <>
-                                <button
-                                type="button"
-                                className="materias-boton"
-                                onClick={() => setModoEdicion(true)}
-                                >
-                                    Editar materia
-                                    </button>
-                                    
-                                    <button
-                                    type="button"
-                                    className="materias-boton secundario"
-                                    onClick={confirmarEliminacion}
-                                    disabled={guardando}
-                                    >
-                                        Eliminar materia
-                                        </button>
-                                        </>
+        const token = localStorage.getItem('token')
+        try {
+            const respuesta = await fetch(`http://localhost:3000/api/materias/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
 
-                            ) : (
-                            <>
-                            <button
-                            type="button"
-                            className="materias-boton"
-                            onClick={guardarCambios}
-                            disabled={guardando}
-                            >
-                                {guardando ? 'Guardando...' : 'Guardar cambios'}
-                                </button>
-                                
-                                <button
-                                type="button"
-                                className="materias-boton secundario"
-                                onClick={() => {
-                                    setNombreEditado(materiaDetalle.nombre || '')
-                                    setDescripcionEditada(materiaDetalle.descripcion || '')
-                                    setModoEdicion(false)
-                                    setErrorDetalle('')
-                                }}
-                                disabled={guardando}
-                                >
-                                    Cancelar
-                                    </button>
-                                    </>
-                                )}
-                                </div>
-                    </section>
-                )}
-            </main>
-        )
+            if (!respuesta.ok) {
+                const errorData = await respuesta.json()
+                throw new Error(errorData.mensaje || 'Error al eliminar')
+            }
+
+            obtenerMaterias()
+        } catch (err) {
+            alert(err.message)
+        }
     }
 
     return (
-        <main className="page-container">
-            <section className="materias-header">
-                <h1 className="page-title">
-                    Listado de <span className="highlight">materias</span>
-                </h1>
+        <div className="page-container">
+            <h2 className="page-title">Gestión de <span className="highlight">Materias</span></h2>
+            <p style={{ marginBottom: '24px', color: 'var(--color-text)' }}>Administración y control total de las materias disponibles en la plataforma.</p>
 
-                <p>
-                    Consultá las materias disponibles y encontrá la que buscás.
-                </p>
-            </section>
-
-            <section className="materias-filtros">
-                <div className="materias-busqueda">
-                    <label htmlFor="buscar-materia">
-                        Buscar materia
-                    </label>
-
-                    <input
-                        id="buscar-materia"
-                        type="search"
-                        placeholder="Buscar por nombre o descripción..."
-                        value={buscar}
-                        onChange={cambiarBusqueda}
-                    />
-                </div>
-
-                <div className="materias-opciones">
-                    <div className="materias-control">
-                        <label htmlFor="limite-materias">
-                            Registros por página
-                        </label>
-
-                        <select
-                            id="limite-materias"
-                            value={limite}
-                            onChange={cambiarLimite}
-                        >
-                            <option value={5}>5</option>
-                            <option value={10}>10</option>
-                            <option value={20}>20</option>
-                            <option value={50}>50</option>
-                        </select>
+            {/* herramientas y filtros */}
+            <div style={{ background: 'var(--color-background)', padding: '20px', borderRadius: 'var(--radius-card)', border: '1px solid var(--color-border)', marginBottom: '24px' }}>
+                
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
+                    {/* Búsqueda por texto */}
+                    <div style={{ flex: '1', minWidth: '200px' }}>
+                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px' }}>Buscar materia</label>
+                        <input 
+                            type="text" 
+                            placeholder="Ej: Matemática, Historia..." 
+                            value={busqueda}
+                            onChange={(e) => { setBusqueda(e.target.value); setPaginaActual(1); }}
+                            style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid var(--color-border)' }}
+                        />
                     </div>
 
-                    <div className="materias-control">
-                        <label htmlFor="orden-materias">
-                            Ordenar por
-                        </label>
-
-                        <select
-                            id="orden-materias"
-                            value={orden}
-                            onChange={cambiarOrden}
+                    {/* ordenamiento */}
+                    <div style={{ flex: '1', minWidth: '150px' }}>
+                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px' }}>Ordenar por</label>
+                        <select 
+                            value={ordenarPor} 
+                            onChange={(e) => setOrdenarPor(e.target.value)}
+                            style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid var(--color-border)' }}
                         >
-                            <option value="id_materia">ID</option>
+                            <option value="id_materia">ID de Materia</option>
                             <option value="nombre">Nombre</option>
-                            <option value="descripcion">Descripción</option>
                         </select>
                     </div>
 
-                    <div className="materias-control">
-                        <label htmlFor="direccion-materias">
-                            Dirección
-                        </label>
-
-                        <select
-                            id="direccion-materias"
-                            value={direccion}
-                            onChange={cambiarDireccion}
+                    <div style={{ flex: '1', minWidth: '150px' }}>
+                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px' }}>Dirección</label>
+                        <select 
+                            value={direccionOrden} 
+                            onChange={(e) => setDireccionOrden(e.target.value)}
+                            style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid var(--color-border)' }}
                         >
                             <option value="ASC">Ascendente</option>
                             <option value="DESC">Descendente</option>
                         </select>
                     </div>
                 </div>
-            </section>
 
-            <section className="materias-resultados">
-                <div className="materias-resumen">
-                    <h2>Materias disponibles</h2>
-
-                    {!cargando && !error && (
-                        <p>
-                            {totalRegistros === 1
-                                ? '1 materia encontrada'
-                                : `${totalRegistros} materias encontradas`}
-                        </p>
-                    )}
+                {/* paginacion y botones */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderTop: '1px solid var(--color-border)', paddingTop: '16px', flexWrap: 'wrap', gap: '16px' }}>
                     
-                    {!cargando && !error && totalRegistros > 0 && (
-                        <button
-                        type="button"
-                        className="materias-boton"
-                        onClick={exportarPDF}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <label style={{ fontSize: '14px', fontWeight: 'bold' }}>Mostrar:</label>
+                        <select 
+                            value={limite} 
+                            onChange={(e) => { setLimite(Number(e.target.value)); setPaginaActual(1); }}
+                            style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid var(--color-border)' }}
                         >
-                            Descargar listado
-                            </button>
-                        )}
-                </div>
+                            <option value={5}>5 registros</option>
+                            <option value={10}>10 registros</option>
+                            <option value={20}>20 registros</option>
+                        </select>
+                        <span style={{ fontSize: '14px', color: 'var(--color-secondary)' }}>
+                            (Total: {totalRegistros} encontrados)
+                        </span>
+                    </div>
 
-                {cargando && (
-                    <p className="materias-mensaje">
-                        Cargando materias...
-                    </p>
-                )}
-
-                {!cargando && error && (
-                    <div className="materias-mensaje materias-error">
-                        <p>{error}</p>
-
-                        <button
-                            type="button"
-                            className="materias-boton"
-                            onClick={() => setIntento((actual) => actual + 1)}
-                        >
-                            Reintentar
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button onClick={exportarPDF} style={{ padding: '10px 16px', borderRadius: 'var(--radius-button)', border: '1px solid var(--color-border)', background: 'white', cursor: 'pointer', fontWeight: 'bold' }}>
+                            Descargar PDF
+                        </button>
+                        <button onClick={abrirFormularioCrear} className="btn-primario">
+                            + Nuevo Registro
                         </button>
                     </div>
-                )}
+                </div>
+            </div>
 
-                {!cargando && !error && materias.length === 0 && (
-                    <p className="materias-mensaje">
-                        {buscar
-                            ? 'No encontramos materias que coincidan con tu búsqueda.'
-                            : 'Todavía no hay materias registradas.'}
-                    </p>
-                )}
+            {/* tabla de registros */}
+            <div style={{ overflowX: 'auto', background: 'var(--color-background)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-card)', padding: '16px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
+                    <thead>
+                        <tr style={{ borderBottom: '2px solid var(--color-border)' }}>
+                            <th style={{ padding: '12px', color: 'var(--color-secondary)' }}>ID</th>
+                            <th style={{ padding: '12px', color: 'var(--color-secondary)' }}>Materia</th>
+                            <th style={{ padding: '12px', color: 'var(--color-secondary)' }}>Descripción</th>
+                            <th style={{ padding: '12px', color: 'var(--color-secondary)' }}>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {cargando ? (
+                            <tr><td colSpan="4" style={{ textAlign: 'center', padding: '32px' }}>Sincronizando con la base de datos...</td></tr>
+                        ) : materias.length > 0 ? (
+                            materias.map((mat) => (
+                                <tr key={mat.id_materia} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                                    <td style={{ padding: '12px' }}>#{mat.id_materia}</td>
+                                    <td style={{ padding: '12px', fontWeight: 'bold' }}>{mat.nombre}</td>
+                                    <td style={{ padding: '12px', maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        {mat.descripcion || <span style={{color: '#999'}}>Sin descripción</span>}
+                                    </td>
+                                    <td style={{ padding: '12px' }}>
+                                        <button onClick={() => abrirFormularioEditar(mat)} style={{ marginRight: '12px', cursor: 'pointer', background: 'none', border: 'none', color: 'var(--color-primary)', fontWeight: 'bold', textDecoration: 'underline' }}>Editar</button>
+                                        <button onClick={() => eliminarMateria(mat.id_materia)} style={{ cursor: 'pointer', background: 'none', border: 'none', color: 'var(--color-terracotta)', fontWeight: 'bold', textDecoration: 'underline' }}>Eliminar</button>
+                                    </td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr><td colSpan="4" style={{ textAlign: 'center', padding: '32px' }}>No hay registros que coincidan con la búsqueda.</td></tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
 
-                {!cargando && !error && materias.length > 0 && (
-                    <>
-                        <div className="materias-lista">
-                            {materias.map((materia) => (
-                                <button
-                                    type="button"
-                                    className="materia-tarjeta materia-tarjeta-boton"
-                                    key={materia.id_materia}
-                                    onClick={() => verDetalle(materia.id_materia)}
-                                >
-                                    <div className="materia-identificador">
-                                        {materia.id_materia}
-                                    </div>
+            {/* controles de pagina */}
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '24px', gap: '16px' }}>
+                <button 
+                    disabled={paginaActual === 1}
+                    onClick={() => setPaginaActual(paginaActual - 1)}
+                    style={{ padding: '8px 16px', borderRadius: 'var(--radius-button)', border: '1px solid var(--color-border)', cursor: paginaActual === 1 ? 'not-allowed' : 'pointer', background: 'white' }}
+                >
+                    Página Anterior
+                </button>
+                <span style={{ fontWeight: 'bold' }}>
+                    Página {paginaActual} de {Math.max(1, Math.ceil(totalRegistros / limite))}
+                </span>
+                <button 
+                    disabled={paginaActual >= Math.ceil(totalRegistros / limite)}
+                    onClick={() => setPaginaActual(paginaActual + 1)}
+                    style={{ padding: '8px 16px', borderRadius: 'var(--radius-button)', border: '1px solid var(--color-border)', cursor: paginaActual >= Math.ceil(totalRegistros / limite) ? 'not-allowed' : 'pointer', background: 'white' }}
+                >
+                    Página Siguiente
+                </button>
+            </div>
 
-                                    <div className="materia-info">
-                                        <h3>{materia.nombre}</h3>
+            {/* ventana de edicion modal */}
+            {mostrarFormulario && (
+                <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, overflowY: 'auto', padding: '20px' }}>
+                    <div style={{ background: 'white', padding: '32px', borderRadius: 'var(--radius-card)', width: '100%', maxWidth: '500px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
+                        
+                        <h3 style={{ marginTop: 0, borderBottom: '2px solid var(--color-border)', paddingBottom: '12px', marginBottom: '20px' }}>
+                            {materiaEditando ? 'Visualización y Edición de Materia' : 'Alta de Nueva Materia'}
+                        </h3>
+                        
+                        {errorFormulario && (
+                            <div style={{ color: 'var(--color-terracotta)', background: '#ffe9e9', padding: '12px', borderRadius: '6px', fontSize: '14px', marginBottom: '20px', border: '1px solid var(--color-terracotta)' }}>
+                                {errorFormulario}
+                            </div>
+                        )}
 
-                                        <p>
-                                            {materia.descripcion ||
-                                                'Sin descripción disponible.'}
-                                        </p>
+                        <form onSubmit={guardarMateria} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            
+                            <div>
+                                <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>Nombre de la Materia</label>
+                                <input 
+                                    type="text" 
+                                    value={formData.nombre} 
+                                    onChange={(e) => setFormData({...formData, nombre: e.target.value})} 
+                                    required 
+                                    placeholder="Ej: Análisis Matemático I"
+                                    style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }} 
+                                />
+                            </div>
 
-                                        <span className="materia-ver-detalle">
-                                            Ver detalle →
-                                        </span>
-                                    </div>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>Descripción</label>
+                                <textarea 
+                                    rows="4" 
+                                    value={formData.descripcion} 
+                                    onChange={(e) => setFormData({...formData, descripcion: e.target.value})} 
+                                    placeholder="Agregá detalles o el enfoque de la materia..."
+                                    style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box', resize: 'vertical' }} 
+                                />
+                            </div>
+
+                            {/* Botones del formulario */}
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '10px', borderTop: '1px solid var(--color-border)', paddingTop: '16px' }}>
+                                <button type="button" onClick={() => setMostrarFormulario(false)} style={{ padding: '10px 20px', borderRadius: 'var(--radius-button)', border: '1px solid var(--color-border)', cursor: 'pointer', background: '#f5f5f5', fontWeight: 'bold' }}>
+                                    Cancelar
                                 </button>
-                            ))}
-                        </div>
-
-                        <div className="materias-paginacion">
-                            <p>
-                                Página {pagina} de {totalPaginas}
-                            </p>
-
-                            <div className="materias-paginacion-botones">
-                                <button
-                                    type="button"
-                                    className="materias-boton secundario"
-                                    disabled={pagina <= 1 || cargando}
-                                    onClick={() =>
-                                        setPagina((actual) => actual - 1)
-                                    }
-                                >
-                                    Anterior
-                                </button>
-
-                                <button
-                                    type="button"
-                                    className="materias-boton"
-                                    disabled={
-                                        pagina >= totalPaginas || cargando
-                                    }
-                                    onClick={() =>
-                                        setPagina((actual) => actual + 1)
-                                    }
-                                >
-                                    Siguiente
+                                <button type="submit" className="btn-primario" style={{ padding: '10px 24px' }}>
+                                    {materiaEditando ? 'Actualizar Registro' : 'Confirmar Alta'}
                                 </button>
                             </div>
-                        </div>
-                    </>
-                )}
-            </section>
-        </main>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+        </div>
     )
 }
 
