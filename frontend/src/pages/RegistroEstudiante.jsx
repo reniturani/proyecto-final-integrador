@@ -38,6 +38,9 @@ function RegistroEstudiante({ onNavegar }) {
 
     // Compartimos los datos del estudiante con App.jsx.
     // No enviamos la contraseña al perfil.
+    
+    localStorage.setItem('usuarioRol', 'estudiante')
+    
     onNavegar('Mi perfil', {
       nombre: formulario.nombre,
       apellido: formulario.apellido,

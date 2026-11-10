@@ -11,6 +11,9 @@ const opciones = [
 function Navbar({ onNavegar, menuAbierto, setMenuAbierto }) {
     // 1. lee que rol tiene el usuario guardado en el navegador
     const rolUsuario = localStorage.getItem('usuarioRol')
+
+    console.log('Rol del usuario:', rolUsuario)
+
     // 2. filtra las opciones segun el rol del usuario
     const opcionesVisibles = opciones.filter((opcion) => {
     if (opcion.ocultarSiLogueado && rolUsuario) {
