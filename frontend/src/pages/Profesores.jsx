@@ -7,6 +7,7 @@ import autoTable from 'jspdf-autotable'
     const [profesores, setProfesores] = useState([])
     const [totalRegistros, setTotalRegistros] = useState(0)
     const [cargando, setCargando] = useState(true)
+    const [materiasDisponibles, setMateriasDisponibles] = useState([])
 
     // estados para paginacion, busqueda y filtros
     const [busqueda, setBusqueda] = useState('')
@@ -29,7 +30,8 @@ import autoTable from 'jspdf-autotable'
     descripcion: '',
     precio_hora: '',
     modalidad: 'Virtual',
-    ubicacion: ''
+    ubicacion: '',
+    materias: []
     })
 
     // conexion con el backend (traer lista real)
@@ -59,6 +61,23 @@ import autoTable from 'jspdf-autotable'
             setCargando(false)
         }
     }
+
+    const obtenerMateriasDisponibles = async () => {
+        try {
+            const token = localStorage.getItem('token')
+            const respuesta = await fetch('http://localhost:3000/api/materias?limite=100', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            const datos = await respuesta.json()
+            if (respuesta.ok) setMateriasDisponibles(datos.datos || [])
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    useEffect(() => {
+        obtenerMateriasDisponibles()
+    }, [])
 
     // se vuelve a ejecutar cada vez que cambia algun filtro o la pagina
     useEffect(() => {
@@ -129,22 +148,27 @@ import autoTable from 'jspdf-autotable'
     // manejo del formulario (abrir y cargar datos)
     const abrirFormularioCrear = () => {
         setProfesorEditando(null)
-        setFormData({ nombre: '', apellido: '', email: '', password: '', descripcion: '', precio_hora: '', modalidad: 'Virtual', ubicacion: '' })
+        setFormData({ nombre: '', apellido: '', email: '', password: '', descripcion: '', precio_hora: '', modalidad: 'Virtual', ubicacion: '', materias: [] })
         setErrorFormulario('')
         setMostrarFormulario(true)
     }
 
     const abrirFormularioEditar = (profesor) => {
         setProfesorEditando(profesor)
+        const materiasPreseleccionadas = profesor.Materia 
+            ? profesor.Materia.map(m => m.id_materia) 
+            : (profesor.Materias ? profesor.Materias.map(m => m.id_materia) : [])
+
         setFormData({
-        nombre: profesor.nombre || '',
-        apellido: profesor.apellido || '',
-        email: profesor.email || '',
-        password: '', 
-        descripcion: profesor.descripcion || '',
-        precio_hora: profesor.precio_hora || '',
-        modalidad: profesor.modalidad || 'Virtual',
-        ubicacion: profesor.ubicacion || ''
+            nombre: profesor.nombre || '',
+            apellido: profesor.apellido || '',
+            email: profesor.email || '',
+            password: '', 
+            descripcion: profesor.descripcion || '',
+            precio_hora: profesor.precio_hora || '',
+            modalidad: profesor.modalidad || 'Virtual',
+            ubicacion: profesor.ubicacion || '',
+            materias: materiasPreseleccionadas
         })
         setErrorFormulario('')
         setMostrarFormulario(true)
@@ -421,6 +445,28 @@ import autoTable from 'jspdf-autotable'
                     <input type="text" placeholder="Ej: Centro, Bahía Blanca" value={formData.ubicacion} onChange={(e) => setFormData({...formData, ubicacion: e.target.value})} style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }} />
                 </div>
 
+                <div style={{ gridColumn: '1 / 3', background: '#f8f9fa', padding: '16px', borderRadius: '4px', border: '1px solid var(--color-border)' }}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '12px' }}>Materias que dicta</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }}>
+                        {materiasDisponibles.map(materia => (
+                            <label key={materia.id_materia} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer' }}>
+                                <input 
+                                    type="checkbox"
+                                    checked={formData.materias.includes(materia.id_materia)}
+                                    onChange={(e) => {
+                                        const seleccionadas = e.target.checked 
+                                            ? [...formData.materias, materia.id_materia]
+                                            : formData.materias.filter(id => id !== materia.id_materia);
+                                        setFormData({ ...formData, materias: seleccionadas });
+                                    }}
+                                    style={{ cursor: 'pointer' }}
+                                />
+                                {materia.nombre}
+                            </label>
+                        ))}
+                    </div>
+                </div>
+                
                 {/* Botones del formulario */}
                 <div style={{ gridColumn: '1 / 3', display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '20px', borderTop: '1px solid var(--color-border)', paddingTop: '16px' }}>
                     <button type="button" onClick={() => setMostrarFormulario(false)} style={{ padding: '10px 20px', borderRadius: 'var(--radius-button)', border: '1px solid var(--color-border)', cursor: 'pointer', background: '#f5f5f5', fontWeight: 'bold' }}>

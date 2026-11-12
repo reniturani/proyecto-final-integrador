@@ -1,5 +1,6 @@
 const Profesor = require('../models/profesores.js');
 const Materia = require('../models/materias.js');
+const ProfesorMateria = require('../models/profesorMateria.js');
 const bcrypt = require('bcrypt');
 const { Op } = require('sequelize'); 
 
@@ -67,10 +68,18 @@ const obtenerProfesores = async (req, res) => {
             offset: offset,
             order: [[sortBy, order.toUpperCase()]], // ordenamiento
             attributes: { exclude: ['password'] },
-            include: materia ? [{
-                model: Materia,
-                where: { nombre: materia },
-            }] : []
+            include: materia ? [
+                {
+                    model: Materia,
+                    where: { nombre: materia },
+                    through: { attributes: [] }
+                }
+            ] : [
+                {
+                    model: Materia,
+                    through: { attributes: [] }
+                }
+            ]
         });
 
         // si no hay resultados
@@ -118,7 +127,7 @@ const obtenerProfesorPorId = async (req, res) => {
 // POST: crear un nuevo profesor
 const crearProfesor = async (req, res) => {
     try {
-        const { nombre, apellido, email, password, descripcion, precio_hora, modalidad, ubicacion, foto_url } = req.body;
+        const { nombre, apellido, email, password, descripcion, precio_hora, modalidad, ubicacion, foto_url, materias } = req.body;
 
         // validacion basica
         if (!nombre || !apellido || !email || !password || !descripcion || !precio_hora || !modalidad) {
@@ -139,6 +148,13 @@ const crearProfesor = async (req, res) => {
             nombre, apellido, email, password: hashedPassword, descripcion, precio_hora, modalidad, ubicacion, foto_url
         });
 
+        if (materias && Array.isArray(materias) && materias.length > 0) {
+            const vinculaciones = materias.map(id_materia => ({
+                id_profesor: nuevoProfesor.id_profesor,
+                id_materia: id_materia
+            }));
+            await ProfesorMateria.bulkCreate(vinculaciones);
+        }
         res.status(201).json({ 
             mensaje: 'Profesor creado con éxito', 
             profesor: { id_profesor: nuevoProfesor.id_profesor, nombre: nuevoProfesor.nombre, email: nuevoProfesor.email } 
@@ -156,7 +172,7 @@ const crearProfesor = async (req, res) => {
 const actualizarProfesor = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, apellido, email, password, descripcion, precio_hora, modalidad, ubicacion, foto_url } = req.body;
+        const { nombre, apellido, email, password, descripcion, precio_hora, modalidad, ubicacion, foto_url, materias } = req.body;
         
         // validacion: si ingresan un precio, que no sea negativo
         if (precio_hora !== undefined && precio_hora < 0) {
@@ -187,6 +203,17 @@ const actualizarProfesor = async (req, res) => {
             ubicacion: ubicacion || profesor.ubicacion,
             foto_url: foto_url || profesor.foto_url
         });
+        
+        if (materias && Array.isArray(materias)) {
+            await ProfesorMateria.destroy({ where: { id_profesor: id } });
+            if (materias.length > 0) {
+                const vinculaciones = materias.map(id_materia => ({
+                    id_profesor: id,
+                    id_materia: id_materia
+                }));
+                await ProfesorMateria.bulkCreate(vinculaciones);
+            }
+        }
 
         res.status(200).json({ mensaje: 'Profesor actualizado correctamente' });
     } catch (error) {
