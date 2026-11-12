@@ -5,6 +5,7 @@ import autoTable from 'jspdf-autotable'
 function Materias() {
     // estados para los datos y la tabla
     const [materias, setMaterias] = useState([])
+    const [materiasFiltradas, setMateriasFiltradas] = useState([])
     const [totalRegistros, setTotalRegistros] = useState(0)
     const [cargando, setCargando] = useState(true)
 
@@ -87,6 +88,7 @@ function Materias() {
         })
 
         setTotalRegistros(resultado.length)
+        setMateriasFiltradas(resultado)
 
         // paginacion
         const indiceInicio = (paginaActual - 1) * limite
@@ -109,14 +111,14 @@ function Materias() {
             const fecha = new Date().toLocaleDateString('es-AR')
             doc.text(`Generado el: ${fecha}`, 14, 30)
 
-            if (!materias || materias.length === 0) {
+            if (!materiasFiltradas || materiasFiltradas.length === 0) {
                 doc.text('No hay materias registradas para exportar.', 14, 45)
                 doc.save('Profy_Listado_Materias.pdf')
                 return
             }
 
             const columnas = ["ID", "Nombre de la Materia", "Descripción"]
-            const filas = materias.map(mat => [
+            const filas = materiasFiltradas.map(mat => [
                 mat.id_materia || '-',
                 mat.nombre || 'Sin Nombre',
                 mat.descripcion || 'Sin descripción'

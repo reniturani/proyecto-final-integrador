@@ -69,8 +69,20 @@ import autoTable from 'jspdf-autotable'
     }, [paginaActual, limite, busqueda, modalidadFiltro, ordenarPor, direccionOrden])
 
     // generar PDF 
-    const exportarPDF = () => {
+    const exportarPDF = async () => {
         try {
+            const token = localStorage.getItem('token')
+            let urlCompleta = `http://localhost:3000/api/profesores?page=1&limit=1000&sortBy=${ordenarPor}&order=${direccionOrden}`
+            
+            if (busqueda) urlCompleta += `&nombre=${busqueda}`
+            if (modalidadFiltro) urlCompleta += `&modalidad=${modalidadFiltro}`
+
+            const respuesta = await fetch(urlCompleta, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            const datos = await respuesta.json()
+            const listaCompleta = datos.profesores || []
+
             const doc = new jsPDF()
 
             doc.setFontSize(18)
@@ -82,14 +94,14 @@ import autoTable from 'jspdf-autotable'
             const fecha = new Date().toLocaleDateString('es-AR')
             doc.text(`Generado el: ${fecha}`, 14, 30)
 
-            if (!profesores || profesores.length === 0) {
+            if (!listaCompleta || listaCompleta.length === 0) {
                 doc.text('No hay profesores registrados para exportar.', 14, 45)
                 doc.save('Profy_Listado_Profesores.pdf')
                 return
             }
 
             const columnas = ["ID", "Nombre Completo", "Email", "Modalidad", "Tarifa/Hora"]
-            const filas = profesores.map(prof => [
+            const filas = listaCompleta.map(prof => [
                 prof.id_profesor || '-',
                 `${prof.nombre || ''} ${prof.apellido || ''}`.trim() || 'Sin Nombre',
                 prof.email || '-',

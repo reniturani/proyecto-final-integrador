@@ -38,7 +38,7 @@ function Navbar({ onNavegar, menuAbierto, setMenuAbierto }) {
     }
 
     return (
-    <header className="navbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 30px', width: '100%', boxSizing: 'border-box' }}>
+    <header className="navbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 30px', width: '100%', boxSizing: 'border-box', borderBottom: '1px solid var(--color-border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
         <button
