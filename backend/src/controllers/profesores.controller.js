@@ -67,10 +67,18 @@ const obtenerProfesores = async (req, res) => {
             offset: offset,
             order: [[sortBy, order.toUpperCase()]], // ordenamiento
             attributes: { exclude: ['password'] },
-            include: materia ? [{
-                model: Materia,
-                where: { nombre: materia },
-            }] : []
+            include: materia ? [
+                {
+                    model: Materia,
+                    where: { nombre: materia },
+                    through: { attributes: [] }
+                }
+            ] : [
+                {
+                    model: Materia,
+                    through: { attributes: [] }
+                }
+            ]
         });
 
         // si no hay resultados
