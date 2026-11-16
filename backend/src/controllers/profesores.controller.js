@@ -68,6 +68,7 @@ const obtenerProfesores = async (req, res) => {
             offset: offset,
             order: [[sortBy, order.toUpperCase()]], // ordenamiento
             attributes: { exclude: ['password'] },
+            distinct: true,
             include: materia ? [
                 {
                     model: Materia,

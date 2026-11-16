@@ -2,10 +2,11 @@ const opciones = [
     { nombre: 'Bienvenida', ruta: '/Bienvenida', requiereAdmin: false, ocultarSiLogueado: true },
     { nombre: 'Aprender', ruta: '/aprender', requiereAdmin: false },
     { nombre: 'Quiénes somos', ruta: '/quienes-somos', requiereAdmin: false },
-    { nombre: 'Mi perfil', ruta: '/mi-perfil', requiereAdmin: false, requiereLogin: true },
+    { nombre: 'Mi perfil', ruta: '/mi-perfil', requiereAdmin: false, requiereLogin: true, ocultarSiAdmin: true },
     { nombre: 'Profesores', ruta: '/profesores', requiereAdmin: true },
     { nombre: 'Materias', ruta: '/materias', requiereAdmin: true },
     { nombre: 'Estudiantes', ruta: '/estudiantes', requiereAdmin: true },
+    { nombre: 'Dashboard', ruta: '/dashboard', requiereAdmin: true },
 ]
 
 function Navbar({ onNavegar, menuAbierto, setMenuAbierto }) {
@@ -20,6 +21,7 @@ function Navbar({ onNavegar, menuAbierto, setMenuAbierto }) {
             return false
         }
     if (opcion.requiereLogin && !rolUsuario) return false
+    if (opcion.ocultarSiAdmin && rolUsuario === 'administrador') return false
     if (opcion.requiereAdmin) {
       return rolUsuario === 'administrador' // solo pasa si es admin
     }
