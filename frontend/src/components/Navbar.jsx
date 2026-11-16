@@ -6,6 +6,7 @@ const opciones = [
     { nombre: 'Profesores', ruta: '/profesores', requiereAdmin: true },
     { nombre: 'Materias', ruta: '/materias', requiereAdmin: true },
     { nombre: 'Estudiantes', ruta: '/estudiantes', requiereAdmin: true },
+    { nombre: 'Dashboard', ruta: '/dashboard', requiereAdmin: true },
 ]
 
 function Navbar({ onNavegar, menuAbierto, setMenuAbierto }) {
