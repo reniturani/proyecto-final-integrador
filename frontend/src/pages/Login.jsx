@@ -34,7 +34,7 @@
 
         // si es administrador, lo llevamos a su panel. si no, al inicio
         if (tipo === 'administrador') {
-            onNavegar('Profesores')
+            onNavegar('Dashboard')
         } else {
             onNavegar('Bienvenida')
         }

@@ -34,10 +34,11 @@ function Aprender() {
         setProfesores([])
         
         try {
-            const datos = await consultarProfesores({
-                materia: materiaSeleccionada,
-                modalidad: modalidadSeleccionada
-            })
+            const parametros = {}
+            if (materiaSeleccionada) parametros.materia = materiaSeleccionada
+            if (modalidadSeleccionada) parametros.modalidad = modalidadSeleccionada
+            
+            const datos = await consultarProfesores(parametros)
             
             setProfesores(datos.profesores)
             setBusquedaRealizada(true)
@@ -94,8 +95,9 @@ function Aprender() {
                         }
                     >
                         <option value="">Elegí una modalidad</option>
-                        <option value="virtual">Virtual</option>
-                        <option value="presencial">Presencial</option>
+                        <option value="Virtual">Virtual</option>
+                        <option value="Presencial">Presencial</option>
+                        <option value="Mixta">Mixta</option>
                     </select>
                 </div>
 

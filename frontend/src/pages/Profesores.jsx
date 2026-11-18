@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
-// import jsPDF from 'jspdf' // libreria para generar pdfs
+import jsPDF from 'jspdf' 
+import autoTable from 'jspdf-autotable'
 
     function Profesores() {
     // estados para los datos y la tabla
     const [profesores, setProfesores] = useState([])
     const [totalRegistros, setTotalRegistros] = useState(0)
     const [cargando, setCargando] = useState(true)
+    const [materiasDisponibles, setMateriasDisponibles] = useState([])
 
     // estados para paginacion, busqueda y filtros
     const [busqueda, setBusqueda] = useState('')
@@ -28,36 +30,54 @@ import { useState, useEffect } from 'react'
     descripcion: '',
     precio_hora: '',
     modalidad: 'Virtual',
-    ubicacion: ''
+    ubicacion: '',
+    materias: []
     })
 
-    // conexion con el backend (traer lista)
+    // conexion con el backend (traer lista real)
     const obtenerProfesores = async () => {
         setCargando(true)
         try {
-        let url = `http://localhost:3000/api/profesores?page=${paginaActual}&limit=${limite}&sortBy=${ordenarPor}&order=${direccionOrden}`
-        
-        if (busqueda) url += `&nombre=${busqueda}`
-        if (modalidadFiltro) url += `&modalidad=${modalidadFiltro}`
+            let url = `http://localhost:3000/api/profesores?page=${paginaActual}&limit=${limite}&sortBy=${ordenarPor}&order=${direccionOrden}`
+            
+            if (busqueda) url += `&nombre=${busqueda}`
+            if (modalidadFiltro) url += `&modalidad=${modalidadFiltro}`
 
-        const respuesta = await fetch(url)
-        const datos = await respuesta.json()
+            const respuesta = await fetch(url)
+            const datos = await respuesta.json()
 
-        if (respuesta.ok) {
-            setProfesores(datos.profesores)
-            setTotalRegistros(datos.totalRegistros)
-        } else {
+            if (respuesta.ok) {
+                setProfesores(datos.profesores)
+                setTotalRegistros(datos.totalRegistros)
+            } else {
+                setProfesores([])
+                setTotalRegistros(0)
+            }
+        } catch (error) {
+            console.error('Error al cargar profesores:', error)
             setProfesores([])
             setTotalRegistros(0)
-        }
-        } catch (error) {
-        console.error('Error al cargar profesores:', error)
-        setProfesores([])
-        setTotalRegistros(0)
         } finally {
-        setCargando(false)
+            setCargando(false)
         }
     }
+
+    const obtenerMateriasDisponibles = async () => {
+        try {
+            const token = localStorage.getItem('token')
+            const respuesta = await fetch('http://localhost:3000/api/materias?limite=100', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            const datos = await respuesta.json()
+            if (respuesta.ok) setMateriasDisponibles(datos.datos || [])
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    useEffect(() => {
+        obtenerMateriasDisponibles()
+    }, [])
 
     // se vuelve a ejecutar cada vez que cambia algun filtro o la pagina
     useEffect(() => {
@@ -68,55 +88,87 @@ import { useState, useEffect } from 'react'
     }, [paginaActual, limite, busqueda, modalidadFiltro, ordenarPor, direccionOrden])
 
     // generar PDF 
-    const exportarPDF = () => {
-        const doc = new jsPDF()
-        
-        // titulo del documento
-        doc.setFontSize(18)
-        doc.text('Reporte de Profesores', 14, 20)
-        
-        // lista de texto simple con los datos cargados
-        doc.setFontSize(12)
-        let posicionY = 30
-        
-        if (profesores.length === 0) {
-        doc.text('No hay profesores para exportar.', 14, posicionY)
-        } else {
-        profesores.forEach((prof) => {
-            const texto = `ID: ${prof.id_profesor} | ${prof.nombre} ${prof.apellido} | ${prof.email} | Mod: ${prof.modalidad}`
-            doc.text(texto, 14, posicionY)
-            posicionY += 10
+    const exportarPDF = async () => {
+        try {
+            const token = localStorage.getItem('token')
+            let urlCompleta = `http://localhost:3000/api/profesores?page=1&limit=1000&sortBy=${ordenarPor}&order=${direccionOrden}`
             
-            // si llega al final de la hoja, crea una nueva
-            if (posicionY > 280) {
-            doc.addPage()
-            posicionY = 20
-            }
-        })
-        }
-        // descarga el archivo
-        doc.save('listado_profesores.pdf')
-    }
+            if (busqueda) urlCompleta += `&nombre=${busqueda}`
+            if (modalidadFiltro) urlCompleta += `&modalidad=${modalidadFiltro}`
 
+            const respuesta = await fetch(urlCompleta, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            const datos = await respuesta.json()
+            const listaCompleta = datos.profesores || []
+
+            const doc = new jsPDF()
+
+            doc.setFontSize(18)
+            doc.setTextColor(36, 69, 0)
+            doc.text('Profy - Reporte de Profesores', 14, 22)
+            
+            doc.setFontSize(10)
+            doc.setTextColor(100)
+            const fecha = new Date().toLocaleDateString('es-AR')
+            doc.text(`Generado el: ${fecha}`, 14, 30)
+
+            if (!listaCompleta || listaCompleta.length === 0) {
+                doc.text('No hay profesores registrados para exportar.', 14, 45)
+                doc.save('Profy_Listado_Profesores.pdf')
+                return
+            }
+
+            const columnas = ["ID", "Nombre Completo", "Email", "Modalidad", "Tarifa/Hora"]
+            const filas = listaCompleta.map(prof => [
+                prof.id_profesor || '-',
+                `${prof.nombre || ''} ${prof.apellido || ''}`.trim() || 'Sin Nombre',
+                prof.email || '-',
+                prof.modalidad || 'Virtual',
+                `$${prof.precio_hora || 0}`
+            ])
+
+            autoTable(doc, {
+                startY: 38,
+                head: [columnas],
+                body: filas,
+                theme: 'grid',
+                headStyles: { fillColor: [36, 69, 0] },
+                alternateRowStyles: { fillColor: [245, 245, 245] },
+                styles: { fontSize: 10, cellPadding: 4 }
+            })
+            
+            doc.save(`Profy_Profesores_${fecha.replace(/\//g, '-')}.pdf`)
+        } catch (error) {
+            console.error('Error al generar PDF:', error)
+            alert('Hubo un problema al generar el archivo PDF.')
+        }
+    }
+    
     // manejo del formulario (abrir y cargar datos)
     const abrirFormularioCrear = () => {
         setProfesorEditando(null)
-        setFormData({ nombre: '', apellido: '', email: '', password: '', descripcion: '', precio_hora: '', modalidad: 'Virtual', ubicacion: '' })
+        setFormData({ nombre: '', apellido: '', email: '', password: '', descripcion: '', precio_hora: '', modalidad: 'Virtual', ubicacion: '', materias: [] })
         setErrorFormulario('')
         setMostrarFormulario(true)
     }
 
     const abrirFormularioEditar = (profesor) => {
         setProfesorEditando(profesor)
+        const materiasPreseleccionadas = profesor.Materia 
+            ? profesor.Materia.map(m => m.id_materia) 
+            : (profesor.Materias ? profesor.Materias.map(m => m.id_materia) : [])
+
         setFormData({
-        nombre: profesor.nombre || '',
-        apellido: profesor.apellido || '',
-        email: profesor.email || '',
-        password: '', 
-        descripcion: profesor.descripcion || '',
-        precio_hora: profesor.precio_hora || '',
-        modalidad: profesor.modalidad || 'Virtual',
-        ubicacion: profesor.ubicacion || ''
+            nombre: profesor.nombre || '',
+            apellido: profesor.apellido || '',
+            email: profesor.email || '',
+            password: '', 
+            descripcion: profesor.descripcion || '',
+            precio_hora: profesor.precio_hora || '',
+            modalidad: profesor.modalidad || 'Virtual',
+            ubicacion: profesor.ubicacion || '',
+            materias: materiasPreseleccionadas
         })
         setErrorFormulario('')
         setMostrarFormulario(true)
@@ -393,6 +445,28 @@ import { useState, useEffect } from 'react'
                     <input type="text" placeholder="Ej: Centro, Bahía Blanca" value={formData.ubicacion} onChange={(e) => setFormData({...formData, ubicacion: e.target.value})} style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }} />
                 </div>
 
+                <div style={{ gridColumn: '1 / 3', background: '#f8f9fa', padding: '16px', borderRadius: '4px', border: '1px solid var(--color-border)' }}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '12px' }}>Materias que dicta</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }}>
+                        {materiasDisponibles.map(materia => (
+                            <label key={materia.id_materia} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer' }}>
+                                <input 
+                                    type="checkbox"
+                                    checked={formData.materias.includes(materia.id_materia)}
+                                    onChange={(e) => {
+                                        const seleccionadas = e.target.checked 
+                                            ? [...formData.materias, materia.id_materia]
+                                            : formData.materias.filter(id => id !== materia.id_materia);
+                                        setFormData({ ...formData, materias: seleccionadas });
+                                    }}
+                                    style={{ cursor: 'pointer' }}
+                                />
+                                {materia.nombre}
+                            </label>
+                        ))}
+                    </div>
+                </div>
+                
                 {/* Botones del formulario */}
                 <div style={{ gridColumn: '1 / 3', display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '20px', borderTop: '1px solid var(--color-border)', paddingTop: '16px' }}>
                     <button type="button" onClick={() => setMostrarFormulario(false)} style={{ padding: '10px 20px', borderRadius: 'var(--radius-button)', border: '1px solid var(--color-border)', cursor: 'pointer', background: '#f5f5f5', fontWeight: 'bold' }}>

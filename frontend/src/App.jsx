@@ -14,7 +14,7 @@ import QuienesSomos from './pages/QuienesSomos'
 import Footer from './components/Footer'
 import RecuperarPassword from './pages/RecuperarPassword'
 import RestablecerPassword from './pages/RestablecerPassword'
-
+import Dashboard from './pages/Dashboard.jsx'
 import './App.css'
 
 function App() {
@@ -62,7 +62,7 @@ function App() {
 {paginaActual === 'Mi perfil' && perfilActual?.rol === 'profesor' && (
   <PerfilProfesor perfilInicial={perfilActual} />
 )}      
-
+        {paginaActual === 'Dashboard' && <Dashboard onNavegar={manejarNavegacion} />}
         {paginaActual === 'Profesores' && <Profesores />}
         {paginaActual === 'Materias' && <Materias />}
         {paginaActual === 'Estudiantes' && <Estudiantes />}
