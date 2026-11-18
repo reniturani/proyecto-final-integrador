@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 
 import { obtenerMaterias } from '../services/materias'
 import { obtenerEstudiantes } from '../services/estudiantes'
+import { obtenerProfesores as obtenerProfesoresServicio } from '../services/profesores'
 
 function Dashboard({ onNavegar }) {
     const [estadisticas, setEstadisticas] = useState({
@@ -12,6 +13,7 @@ function Dashboard({ onNavegar }) {
         modalidades: {
             Virtual: 0,
             Presencial: 0,
+
             Mixta: 0
         }
     })

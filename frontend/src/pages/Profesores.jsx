@@ -2,6 +2,15 @@ import { useState, useEffect } from 'react'
 import jsPDF from 'jspdf' 
 import autoTable from 'jspdf-autotable'
 
+import {
+    obtenerProfesores as obtenerProfesoresServicio,
+    crearProfesor,
+    actualizarProfesor,
+    eliminarProfesor as eliminarProfesorServicio
+} from '../services/profesores'
+
+import { obtenerMaterias as obtenerMateriasServicio } from '../services/materias'
+
     function Profesores() {
     // estados para los datos y la tabla
     const [profesores, setProfesores] = useState([])
@@ -34,46 +43,44 @@ import autoTable from 'jspdf-autotable'
     materias: []
     })
 
-    // conexion con el backend (traer lista real)
+    // Obtener la lista de profesores desde el servicio mock (datos en memoria). En un futuro integra conexion con el backend
     const obtenerProfesores = async () => {
-        setCargando(true)
-        try {
-            let url = `http://localhost:3000/api/profesores?page=${paginaActual}&limit=${limite}&sortBy=${ordenarPor}&order=${direccionOrden}`
-            
-            if (busqueda) url += `&nombre=${busqueda}`
-            if (modalidadFiltro) url += `&modalidad=${modalidadFiltro}`
+    setCargando(true)
 
-            const respuesta = await fetch(url)
-            const datos = await respuesta.json()
+    try {
+        const respuesta = await obtenerProfesoresServicio({
+            pagina: paginaActual,
+            limite,
+            buscar: busqueda,
+            modalidad: modalidadFiltro,
+            orden: ordenarPor,
+            direccion: direccionOrden
+        })
 
-            if (respuesta.ok) {
-                setProfesores(datos.profesores)
-                setTotalRegistros(datos.totalRegistros)
-            } else {
-                setProfesores([])
-                setTotalRegistros(0)
-            }
-        } catch (error) {
-            console.error('Error al cargar profesores:', error)
-            setProfesores([])
-            setTotalRegistros(0)
-        } finally {
-            setCargando(false)
-        }
+        setProfesores(respuesta.datos || [])
+        setTotalRegistros(respuesta.totalRegistros || 0)
+    } catch (error) {
+        console.error('Error al obtener profesores:', error)
+        setProfesores([])
+        setTotalRegistros(0)
+    } finally {
+        setCargando(false)
     }
+}
 
     const obtenerMateriasDisponibles = async () => {
-        try {
-            const token = localStorage.getItem('token')
-            const respuesta = await fetch('http://localhost:3000/api/materias?limite=100', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            })
-            const datos = await respuesta.json()
-            if (respuesta.ok) setMateriasDisponibles(datos.datos || [])
-        } catch (error) {
-            console.error(error)
-        }
+    try {
+        const respuesta = await obtenerMateriasServicio({
+            pagina: 1,
+            limite: 100
+        })
+
+        setMateriasDisponibles(respuesta.datos || [])
+    } catch (error) {
+        console.error('Error al obtener materias:', error)
+        setMateriasDisponibles([])
     }
+}
 
     useEffect(() => {
         obtenerMateriasDisponibles()
@@ -88,62 +95,75 @@ import autoTable from 'jspdf-autotable'
     }, [paginaActual, limite, busqueda, modalidadFiltro, ordenarPor, direccionOrden])
 
     // generar PDF 
-    const exportarPDF = async () => {
-        try {
-            const token = localStorage.getItem('token')
-            let urlCompleta = `http://localhost:3000/api/profesores?page=1&limit=1000&sortBy=${ordenarPor}&order=${direccionOrden}`
-            
-            if (busqueda) urlCompleta += `&nombre=${busqueda}`
-            if (modalidadFiltro) urlCompleta += `&modalidad=${modalidadFiltro}`
+    
+// Generar PDF
+const exportarPDF = async () => {
+    try {
+        // Obtener todos los profesores desde el servicio mock,
+        // aplicando los filtros y el ordenamiento actuales.
+        const respuesta = await obtenerProfesoresServicio({
+            pagina: 1,
+            limite: 1000,
+            buscar: busqueda,
+            modalidad: modalidadFiltro,
+            orden: ordenarPor,
+            direccion: direccionOrden
+        })
 
-            const respuesta = await fetch(urlCompleta, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            })
-            const datos = await respuesta.json()
-            const listaCompleta = datos.profesores || []
+        const listaCompleta = respuesta.datos || []
 
-            const doc = new jsPDF()
+        const doc = new jsPDF()
 
-            doc.setFontSize(18)
-            doc.setTextColor(36, 69, 0)
-            doc.text('Profy - Reporte de Profesores', 14, 22)
-            
-            doc.setFontSize(10)
-            doc.setTextColor(100)
-            const fecha = new Date().toLocaleDateString('es-AR')
-            doc.text(`Generado el: ${fecha}`, 14, 30)
+        doc.setFontSize(18)
+        doc.setTextColor(36, 69, 0)
+        doc.text('Profy - Reporte de Profesores', 14, 22)
 
-            if (!listaCompleta || listaCompleta.length === 0) {
-                doc.text('No hay profesores registrados para exportar.', 14, 45)
-                doc.save('Profy_Listado_Profesores.pdf')
-                return
-            }
+        doc.setFontSize(10)
+        doc.setTextColor(100)
+        const fecha = new Date().toLocaleDateString('es-AR')
+        doc.text(`Generado el: ${fecha}`, 14, 30)
 
-            const columnas = ["ID", "Nombre Completo", "Email", "Modalidad", "Tarifa/Hora"]
-            const filas = listaCompleta.map(prof => [
-                prof.id_profesor || '-',
-                `${prof.nombre || ''} ${prof.apellido || ''}`.trim() || 'Sin Nombre',
-                prof.email || '-',
-                prof.modalidad || 'Virtual',
-                `$${prof.precio_hora || 0}`
-            ])
-
-            autoTable(doc, {
-                startY: 38,
-                head: [columnas],
-                body: filas,
-                theme: 'grid',
-                headStyles: { fillColor: [36, 69, 0] },
-                alternateRowStyles: { fillColor: [245, 245, 245] },
-                styles: { fontSize: 10, cellPadding: 4 }
-            })
-            
-            doc.save(`Profy_Profesores_${fecha.replace(/\//g, '-')}.pdf`)
-        } catch (error) {
-            console.error('Error al generar PDF:', error)
-            alert('Hubo un problema al generar el archivo PDF.')
+        // Validar si existen profesores para exportar
+        if (!listaCompleta || listaCompleta.length === 0) {
+            doc.text('No hay profesores registrados para exportar.', 14, 45)
+            doc.save('Profy_Listado_Profesores.pdf')
+            return
         }
+
+        const columnas = [
+            "ID",
+            "Nombre Completo",
+            "Email",
+            "Modalidad",
+            "Tarifa/Hora"
+        ]
+
+        const filas = listaCompleta.map(prof => [
+            prof.id_profesor || '-',
+            `${prof.nombre || ''} ${prof.apellido || ''}`.trim() || 'Sin Nombre',
+            prof.email || '-',
+            prof.modalidad || 'Virtual',
+            `$${prof.precio_hora || 0}`
+        ])
+
+        autoTable(doc, {
+            startY: 38,
+            head: [columnas],
+            body: filas,
+            theme: 'grid',
+            headStyles: { fillColor: [36, 69, 0] },
+            alternateRowStyles: { fillColor: [245, 245, 245] },
+            styles: { fontSize: 10, cellPadding: 4 }
+        })
+
+        doc.save(`Profy_Profesores_${fecha.replace(/\//g, '-')}.pdf`)
+
+    } catch (error) {
+        console.error('Error al generar PDF:', error)
+        alert('Hubo un problema al generar el archivo PDF.')
     }
+}
+
     
     // manejo del formulario (abrir y cargar datos)
     const abrirFormularioCrear = () => {
@@ -155,9 +175,7 @@ import autoTable from 'jspdf-autotable'
 
     const abrirFormularioEditar = (profesor) => {
         setProfesorEditando(profesor)
-        const materiasPreseleccionadas = profesor.Materia 
-            ? profesor.Materia.map(m => m.id_materia) 
-            : (profesor.Materias ? profesor.Materias.map(m => m.id_materia) : [])
+        const materiasPreseleccionadas = profesor.materias || []
 
         setFormData({
             nombre: profesor.nombre || '',
@@ -176,60 +194,34 @@ import autoTable from 'jspdf-autotable'
 
     // enviar datos al backend (POST / PUT)
     const guardarProfesor = async (e) => {
-        e.preventDefault()
-        setErrorFormulario('')
+    e.preventDefault()
+    setErrorFormulario('')
 
-        const token = localStorage.getItem('token')
-        const url = profesorEditando 
-        ? `http://localhost:3000/api/profesores/${profesorEditando.id_profesor}`
-        : 'http://localhost:3000/api/profesores'
-        
-        const method = profesorEditando ? 'PUT' : 'POST'
-
-        try {
-        const respuesta = await fetch(url, {
-            method: method,
-            headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(formData)
-        })
-
-        const resultado = await respuesta.json()
-
-        if (!respuesta.ok) {
-            throw new Error(resultado.mensaje || 'Error al guardar los datos')
+    try {
+        if (profesorEditando) {
+            await actualizarProfesor(profesorEditando.id_profesor, formData)
+        } else {
+            await crearProfesor(formData)
         }
 
         setMostrarFormulario(false)
-        obtenerProfesores() // recargar la tabla para ver los cambios
-        } catch (err) {
+        await obtenerProfesores()
+    } catch (err) {
         setErrorFormulario(err.message)
-        }
     }
+}
 
-    // eliminar (DELETE)
-    const eliminarProfesor = async (id) => {
-        if (!window.confirm('¿Estás segura de que querés eliminar este profesor de forma permanente?')) return
+    // Eliminar profesor
+const eliminarProfesor = async (id) => {
+    if (!window.confirm('¿Estás segura de que querés eliminar este profesor?')) return
 
-        const token = localStorage.getItem('token')
-        try {
-        const respuesta = await fetch(`http://localhost:3000/api/profesores/${id}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-        })
-
-        if (!respuesta.ok) {
-            const errorData = await respuesta.json()
-            throw new Error(errorData.mensaje || 'Error al eliminar')
-        }
-
-        obtenerProfesores()
-        } catch (err) {
+    try {
+        await eliminarProfesorServicio(id)
+        await obtenerProfesores()
+    } catch (err) {
         alert(err.message)
-        }
     }
+}
 
     return (
         <div className="page-container">
@@ -339,7 +331,7 @@ import autoTable from 'jspdf-autotable'
             </thead>
             <tbody>
                 {cargando ? (
-                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '32px' }}>Sincronizando con la base de datos...</td></tr>
+                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '32px' }}>Cargando profesores...</td></tr>
                 ) : profesores.length > 0 ? (
                 profesores.map((prof) => (
                     <tr key={prof.id_profesor} style={{ borderBottom: '1px solid var(--color-border)' }}>
