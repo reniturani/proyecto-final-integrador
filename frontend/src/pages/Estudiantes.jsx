@@ -144,7 +144,7 @@ function Estudiantes() {
     }
 
 
-const exportarPDF = async () => { //Reni esta es la funcion para exportar a PDF
+const exportarPDF = async () => { 
     try {
         // Obtener todos los estudiantes, sin limitarse a la página actual.
         const respuesta = await obtenerEstudiantes({

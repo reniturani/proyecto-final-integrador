@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 
+import {
+    obtenerMaterias as obtenerMateriasServicio,
+    crearMateria,
+    actualizarMateria,
+    eliminarMateria as eliminarMateriaServicio
+} from '../services/materias'
+
 function Materias() {
     // estados para los datos y la tabla
     const [materias, setMaterias] = useState([])
@@ -28,28 +35,23 @@ function Materias() {
 
     // estados adicionales para manejar los datos localmente
     const [todasLasMaterias, setTodasLasMaterias] = useState([])
-    const obtenerMaterias = async () => {
-        setCargando(true)
-        try {
-            const token = localStorage.getItem('token')
+   const obtenerMaterias = async () => {
+    setCargando(true)
 
-            const respuesta = await fetch('http://localhost:3000/api/materias?limite=100&pagina=1', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            })
-            const datos = await respuesta.json()
+    try {
+        const respuesta = await obtenerMateriasServicio({
+            pagina: 1,
+            limite: 100
+        })
 
-            if (respuesta.ok) {
-                setTodasLasMaterias(datos.datos || [])
-            } else {
-                setTodasLasMaterias([])
-            }
-        } catch (error) {
-            console.error('Error al cargar materias:', error)
-            setTodasLasMaterias([])
-        } finally {
-            setCargando(false)
-        }
+        setTodasLasMaterias(respuesta.datos || [])
+    } catch (error) {
+        console.error('Error al cargar materias:', error)
+        setTodasLasMaterias([])
+    } finally {
+        setCargando(false)
     }
+}
 
     // solo busca en el backend cuando entramos a la pagina o cuando guardamos/eliminamos algo
     useEffect(() => {
@@ -161,60 +163,38 @@ function Materias() {
 
     // enviar datos al backend (POST / PUT)
     const guardarMateria = async (e) => {
-        e.preventDefault()
-        setErrorFormulario('')
+    e.preventDefault()
+    setErrorFormulario('')
 
-        const token = localStorage.getItem('token')
-        const url = materiaEditando 
-            ? `http://localhost:3000/api/materias/${materiaEditando.id_materia}`
-            : 'http://localhost:3000/api/materias'
-        
-        const method = materiaEditando ? 'PUT' : 'POST'
-
-        try {
-            const respuesta = await fetch(url, {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(formData)
-            })
-
-            const resultado = await respuesta.json()
-
-            if (!respuesta.ok) {
-                throw new Error(resultado.mensaje || 'Error al guardar los datos')
-            }
-
-            setMostrarFormulario(false)
-            obtenerMaterias() // recargar la tabla
-        } catch (err) {
-            setErrorFormulario(err.message)
+    try {
+        if (materiaEditando) {
+            await actualizarMateria(
+                materiaEditando.id_materia,
+                formData
+            )
+        } else {
+            await crearMateria(formData)
         }
+
+        setMostrarFormulario(false)
+        await obtenerMaterias()
+
+    } catch (err) {
+        setErrorFormulario(err.message)
     }
+}
 
     // eliminar (DELETE)
     const eliminarMateria = async (id) => {
-        if (!window.confirm('¿Estás segura de que querés eliminar esta materia de forma permanente?')) return
+    if (!window.confirm('¿Estás segura de que querés eliminar esta materia de forma permanente?')) return
 
-        const token = localStorage.getItem('token')
-        try {
-            const respuesta = await fetch(`http://localhost:3000/api/materias/${id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            })
-
-            if (!respuesta.ok) {
-                const errorData = await respuesta.json()
-                throw new Error(errorData.mensaje || 'Error al eliminar')
-            }
-
-            obtenerMaterias()
-        } catch (err) {
-            alert(err.message)
-        }
+    try {
+        await eliminarMateriaServicio(id)
+        await obtenerMaterias()
+    } catch (err) {
+        alert(err.message)
     }
+}
 
     return (
         <div className="page-container">
