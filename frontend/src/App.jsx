@@ -16,6 +16,9 @@ import RecuperarPassword from './pages/RecuperarPassword'
 import RestablecerPassword from './pages/RestablecerPassword'
 import Dashboard from './pages/Dashboard.jsx'
 import './App.css'
+import './styles/registros.css';
+import './styles/perfiles.css';
+
 
 function App() {
   const [paginaActual, setPaginaActual] = useState('Bienvenida')
