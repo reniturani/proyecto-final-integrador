@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import jsPDF from 'jspdf' 
 import autoTable from 'jspdf-autotable'
 
@@ -44,7 +44,7 @@ import { obtenerMaterias as obtenerMateriasServicio } from '../services/materias
     })
 
     // Obtener la lista de profesores desde el servicio mock (datos en memoria). En un futuro integra conexion con el backend
-    const obtenerProfesores = async () => {
+    const obtenerProfesores = useCallback(async () => {
     setCargando(true)
 
     try {
@@ -66,9 +66,9 @@ import { obtenerMaterias as obtenerMateriasServicio } from '../services/materias
     } finally {
         setCargando(false)
     }
-}
+}, [paginaActual, limite, busqueda, modalidadFiltro, ordenarPor, direccionOrden])
 
-    const obtenerMateriasDisponibles = async () => {
+    const obtenerMateriasDisponibles = useCallback(async () => {
     try {
         const respuesta = await obtenerMateriasServicio({
             pagina: 1,
@@ -80,19 +80,21 @@ import { obtenerMaterias as obtenerMateriasServicio } from '../services/materias
         console.error('Error al obtener materias:', error)
         setMateriasDisponibles([])
     }
-}
+}, [])
 
-    useEffect(() => {
-        obtenerMateriasDisponibles()
-    }, [])
-
-    // se vuelve a ejecutar cada vez que cambia algun filtro o la pagina
     useEffect(() => {
         const timer = setTimeout(() => {
-        obtenerProfesores()
-        }, 300) 
+            obtenerMateriasDisponibles()
+        }, 0)
         return () => clearTimeout(timer)
-    }, [paginaActual, limite, busqueda, modalidadFiltro, ordenarPor, direccionOrden])
+    }, [obtenerMateriasDisponibles])
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            obtenerProfesores()
+        }, 300)
+        return () => clearTimeout(timer)
+    }, [obtenerProfesores])
 
     // generar PDF 
     

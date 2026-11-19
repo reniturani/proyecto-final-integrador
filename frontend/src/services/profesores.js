@@ -1,4 +1,4 @@
-
+import { obtenerMaterias } from './materias'
 const profesoresIniciales = [
     {
         id_profesor: 1,
@@ -299,19 +299,36 @@ export async function eliminarProfesor(id) {
 }
 // Buscar profesores por materia y modalidad
 export const buscarProfesores = async ({ materia = '', modalidad = '' } = {}) => {
-    let profesores = await obtenerTodosLosProfesores()
+    let listaProfesores = await obtenerTodosLosProfesores()
+    const respuestaMaterias = await obtenerMaterias({ limite: 100 })
+    const listaMaterias = respuestaMaterias.datos || []
 
     if (materia) {
-        profesores = profesores.filter(profesor =>
-            profesor.materias.includes(Number(materia))
+        const materiaEncontrada = listaMaterias.find(
+            m => m.nombre.toLowerCase() === String(materia).toLowerCase() || m.id_materia === Number(materia)
+        )
+
+        if (!materiaEncontrada) {
+            return { profesores: [] }
+        }
+
+        listaProfesores = listaProfesores.filter(profesor =>
+            profesor.materias.includes(materiaEncontrada.id_materia)
         )
     }
 
     if (modalidad) {
-        profesores = profesores.filter(profesor =>
-            profesor.modalidad === modalidad
+        listaProfesores = listaProfesores.filter(profesor =>
+            profesor.modalidad.toLowerCase() === modalidad.toLowerCase()
         )
     }
 
-    return { profesores }
+    const profesoresConMaterias = listaProfesores.map(profesor => ({
+        ...profesor,
+        materias: profesor.materias
+            .map(idMat => listaMaterias.find(m => m.id_materia === idMat))
+            .filter(Boolean)
+    }))
+
+    return { profesores: profesoresConMaterias }
 }
