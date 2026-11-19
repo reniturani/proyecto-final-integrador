@@ -67,6 +67,7 @@ function RegistroProfesor({ onNavegar }) {
       apellido: formulario.apellido,
       email: formulario.email,
       materias: formulario.materias,
+      modalidad: formulario.modalidad,
       presentacion: formulario.presentacion,
       rol: 'profesor'
     })
@@ -111,6 +112,22 @@ function RegistroProfesor({ onNavegar }) {
             </label>
         ))}
     </div>
+</div>
+<div className="registro-campo">
+    <label htmlFor="modalidad">Modalidad de enseñanza</label>
+
+    <select
+        id="modalidad"
+        name="modalidad"
+        value={formulario.modalidad}
+        onChange={manejarCambio}
+        required
+    >
+        <option value="">Seleccioná una modalidad</option>
+        <option value="Virtual">Virtual</option>
+        <option value="Presencial">Presencial</option>
+        <option value="Mixta">Mixta</option>
+    </select>
 </div>
 
           <div className="registro-campo">
