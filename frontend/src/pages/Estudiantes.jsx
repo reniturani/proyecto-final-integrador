@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react'
 import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 import {
     obtenerEstudiantes,
     obtenerEstudiantePorId,
@@ -144,55 +145,71 @@ function Estudiantes() {
     }
 
 
-const exportarPDF = async () => { 
+
+const exportarPDF = async () => {
     try {
-        // Obtener todos los estudiantes, sin limitarse a la página actual.
+        // Obtener todos los estudiantes aplicando los filtros actuales.
         const respuesta = await obtenerEstudiantes({
             pagina: 1,
             limite: Math.max(totalRegistros, 1),
             buscar: busqueda,
             orden: ordenarPor,
             direccion: direccionOrden
-        })
+        });
 
-        const todosLosEstudiantes = respuesta.datos || []
-        const documento = new jsPDF()
+        const listaCompleta = respuesta.datos || [];
+        const doc = new jsPDF();
 
-        documento.setFontSize(18)
-        documento.text('Listado de estudiantes', 14, 20)
+        // Encabezado
+        doc.setFontSize(18);
+        doc.setTextColor(36, 69, 0);
+        doc.text('Profy - Reporte de Estudiantes', 14, 22);
 
-        documento.setFontSize(10)
-        documento.text(`Total de estudiantes: ${respuesta.totalRegistros}`, 14, 28)
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        const fecha = new Date().toLocaleDateString('es-AR');
+        doc.text(`Generado el: ${fecha}`, 14, 30);
 
-        let posicionY = 38
-
-        if (todosLosEstudiantes.length === 0) {
-            documento.text('No hay estudiantes para exportar.', 14, posicionY)
-        } else {
-            todosLosEstudiantes.forEach((estudiante) => {
-                const texto =
-                    `#${estudiante.id_estudiante} | ` +
-                    `${estudiante.nombre} ${estudiante.apellido} | ` +
-                    `${estudiante.email}`
-
-                const lineas = documento.splitTextToSize(texto, 180)
-
-                if (posicionY + lineas.length * 6 > 280) {
-                    documento.addPage()
-                    posicionY = 20
-                }
-
-                documento.text(lineas, 14, posicionY)
-                posicionY += lineas.length * 6 + 3
-            })
+        // Validar si existen estudiantes para exportar
+        if (listaCompleta.length === 0) {
+            doc.text('No hay estudiantes registrados para exportar.', 14, 45);
+            doc.save('Profy_Listado_Estudiantes.pdf');
+            return;
         }
 
-        documento.save('listado_estudiantes.pdf')
-    } catch (err) {
-        console.error('Error al exportar el PDF:', err)
-        setError('No se pudo generar el PDF. Intentá nuevamente.')
+        // Columnas de la tabla
+        const columnas = [
+            'ID',
+            'Nombre Completo',
+            'Email'
+        ];
+
+        // Datos de los estudiantes
+        const filas = listaCompleta.map(estudiante => [
+            estudiante.id_estudiante || '-',
+            `${estudiante.nombre || ''} ${estudiante.apellido || ''}`.trim() || 'Sin Nombre',
+            estudiante.email || '-'
+        ]);
+
+        // Generar tabla
+        autoTable(doc, {
+            startY: 38,
+            head: [columnas],
+            body: filas,
+            theme: 'grid',
+            headStyles: { fillColor: [36, 69, 0] },
+            alternateRowStyles: { fillColor: [245, 245, 245] },
+            styles: { fontSize: 10, cellPadding: 4 }
+        });
+
+        doc.save(`Profy_Estudiantes_${fecha.replace(/\//g, '-')}.pdf`);
+
+    } catch (error) {
+        console.error('Error al generar PDF:', error);
+        alert('Hubo un problema al generar el archivo PDF.');
     }
-}
+};
+
 
 
     return (

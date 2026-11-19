@@ -34,6 +34,7 @@ function RegistroProfesor({ onNavegar }) {
     })
 
     const [institucionesSugeridas, setInstitucionesSugeridas] = useState([])
+    const [tipoInstitucionActiva, setTipoInstitucionActiva] = useState(null)
     const [materiasDisponibles, setMateriasDisponibles] = useState([])
     const [error, setError] = useState('')
     const [mensaje, setMensaje] = useState('')
@@ -72,6 +73,25 @@ function RegistroProfesor({ onNavegar }) {
             )
             .trim()
     }
+
+const validarFormacion = (texto) => {
+    const valor = texto.trim();
+
+    // Debe tener al menos 4 caracteres.
+    if (valor.length < 4) return false;
+
+    // Debe contener letras.
+    if (!/[a-záéíóúüñ]/i.test(valor)) return false;
+
+    // No debe ser solamente números o símbolos.
+    if (!/[a-záéíóúüñ]{2,}/i.test(valor)) return false;
+
+    // No permite repetir una misma letra demasiadas veces.
+    if (/(.)\1{4,}/i.test(valor.replace(/\s/g, ''))) return false;
+
+    return true;
+};
+
 
     const manejarNormalizacion = (e) => {
         const { name, value } = e.target
@@ -114,7 +134,7 @@ function RegistroProfesor({ onNavegar }) {
                 }
             }
         }))
-
+        setTipoInstitucionActiva(tipo)
         setInstitucionesSugeridas(obtenerInstituciones(valor))
     }
 
@@ -131,6 +151,8 @@ function RegistroProfesor({ onNavegar }) {
         }))
 
         setInstitucionesSugeridas([])
+        setTipoInstitucionActiva(null)
+
     }
 
     const manejarEnvio = (e) => {
@@ -158,6 +180,21 @@ function RegistroProfesor({ onNavegar }) {
         if (/(.)\1{5,}/i.test(presentacion.replace(/\s/g, ''))) {
             setError('La presentación contiene demasiados caracteres repetidos.')
             return
+        }
+        const tiposFormacion = [
+            { id: 'universitario', nombre: 'título universitario' },
+            { id: 'terciario', nombre: 'título terciario' },
+            { id: 'cursos', nombre: 'curso realizado' }
+        ]
+        for (const tipo of tiposFormacion) {
+            const formacion = formulario.formacion[tipo.id]
+
+            if (formacion.seleccionado && !validarFormacion(formacion.titulo)) {
+                setError(
+                    `El nombre del ${tipo.nombre} no es válido. Ingresá al menos 4 caracteres y un nombre descriptivo.`
+                )
+                return
+            }
         }
 
         localStorage.setItem('usuarioRol', 'profesor')
@@ -361,7 +398,7 @@ function RegistroProfesor({ onNavegar }) {
                                                 required
                                             />
 
-                                            {institucionesSugeridas.length > 0 && (
+                                            {tipoInstitucionActiva === tipo.id && institucionesSugeridas.length > 0 && (
                                                 <div className="institucion-sugerencias">
                                                     {institucionesSugeridas.map((institucion, indice) => (
                                                         <button
