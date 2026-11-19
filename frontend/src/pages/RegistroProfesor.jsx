@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { obtenerMaterias } from '../services/materias'
 
 function RegistroProfesor({ onNavegar }) {
   const [formulario, setFormulario] = useState({
@@ -7,12 +8,31 @@ function RegistroProfesor({ onNavegar }) {
     email: '',
     password: '',
     confirmarPassword: '',
-    materias: '',
+    materias: [],
+    modalidad: '',
     presentacion: ''
   })
+  const [materiasDisponibles, setMateriasDisponibles] = useState([])
 
   const [error, setError] = useState('')
   const [mensaje, setMensaje] = useState('')
+  useEffect(() => {
+    async function cargarMaterias() {
+        try {
+            const respuesta = await obtenerMaterias({
+                pagina: 1,
+                limite: 100
+            })
+
+            setMateriasDisponibles(respuesta.datos || [])
+        } catch (error) {
+            console.error('Error al cargar materias:', error)
+        }
+    }
+
+    cargarMaterias()
+}, [])
+
 
   const manejarCambio = (e) => {
     const { name, value } = e.target
@@ -68,17 +88,30 @@ function RegistroProfesor({ onNavegar }) {
           onSubmit={manejarEnvio}
         >
           <div className="registro-campo">
-            <label htmlFor="nombre">Nombre</label>
-            <input
-              id="nombre"
-              name="nombre"
-              value={formulario.nombre}
-              onChange={manejarCambio}
-              placeholder="Tu nombre"
-              autoComplete="given-name"
-              required
-            />
-          </div>
+    <label>Materias que enseñás</label>
+
+    <div className="registro-materias">
+        {materiasDisponibles.map((materia) => (
+            <label key={materia.id_materia}>
+                <input
+                    type="checkbox"
+                    checked={formulario.materias.includes(materia.id_materia)}
+                    onChange={(e) => {
+                        const id = materia.id_materia
+
+                        setFormulario((previo) => ({
+                            ...previo,
+                            materias: e.target.checked
+                                ? [...previo.materias, id]
+                                : previo.materias.filter((m) => m !== id)
+                        }))
+                    }}
+                />
+                {materia.nombre}
+            </label>
+        ))}
+    </div>
+</div>
 
           <div className="registro-campo">
             <label htmlFor="apellido">Apellido</label>
