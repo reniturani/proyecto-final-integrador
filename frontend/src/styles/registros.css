@@ -1,0 +1,356 @@
+
+
+/* ========================================
+REGISTRO DE ESTUDIANTES Y PROFESORES
+======================================== */
+
+/* Página y tarjeta */
+
+.registro-pagina {
+  width: 100%;
+  min-height: 70vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+  box-sizing: border-box;
+}
+
+.registro-tarjeta {
+  width: 100%;
+  max-width: 680px;
+  padding: 36px;
+  background: #fffdf8;
+  border: 1px solid #e7e6dc;
+  border-radius: 18px;
+  box-shadow: 0 8px 30px rgba(30, 55, 0, 0.08);
+  box-sizing: border-box;
+}
+
+.registro-tarjeta-profesor {
+  max-width: 900px;
+  padding: 40px 48px;
+}
+
+/* Títulos y descripción */
+
+.registro-titulo {
+  margin: 0 0 12px;
+  color: #1d3600;
+  font-size: clamp(28px, 4vw, 36px);
+  line-height: 1.2;
+  text-align: center;
+}
+
+.registro-descripcion {
+  margin: 0 0 28px;
+  color: #526044;
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* Formulario */
+
+.registro-formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.registro-tarjeta-profesor .registro-formulario {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 24px;
+  align-items: start;
+}
+
+.registro-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.registro-campo label {
+  color: #243b0b;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.registro-campo input,
+.registro-campo select,
+.registro-campo textarea {
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 14px;
+  border: 1px solid #cbd2c1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #243b0b;
+  font: inherit;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.registro-campo textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.registro-campo input:focus,
+.registro-campo select:focus,
+.registro-campo textarea:focus {
+  border-color: #244500;
+  box-shadow: 0 0 0 3px rgba(36, 69, 0, 0.12);
+}
+
+.registro-campo select {
+  cursor: pointer;
+}
+
+/* Campos que ocupan todo el ancho */
+
+.registro-tarjeta-profesor .registro-campo-completo {
+  grid-column: 1 / -1;
+}
+
+/* Materias */
+
+.registro-materias {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid #d9dfd0;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.registro-materias label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 5px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.3;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.registro-materias label:hover {
+  background: #edf2e7;
+}
+
+.registro-materias input[type="checkbox"] {
+  appearance: none;
+  width: 17px;
+  min-width: 17px;
+  height: 17px;
+  min-height: 17px;
+  padding: 0;
+  margin: 0;
+  border: 1px solid #b8c2ad;
+  border-radius: 4px;
+  background: white;
+  flex-shrink: 0;
+  accent-color: #244500;
+  cursor: pointer;
+}
+
+.registro-materias input[type="checkbox"]:checked {
+  background-color: #244500;
+  border-color: #244500;
+}
+
+.registro-materias input[type="checkbox"]:checked::after {
+  content: "✓";
+  display: block;
+  color: white;
+  font-size: 12px;
+  text-align: center;
+  line-height: 15px;
+}
+
+.registro-materias input[type="checkbox"]:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Formación académica y experiencia */
+
+.registro-tarjeta-profesor .registro-opcion-formacion {
+  margin: 12px 0;
+}
+
+.registro-tarjeta-profesor .registro-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.registro-tarjeta-profesor .registro-checkbox input[type="checkbox"] {
+  appearance: auto;
+  width: 17px;
+  min-width: 17px;
+  height: 17px;
+  min-height: 17px;
+  margin: 0;
+  padding: 0;
+  accent-color: #244500;
+  cursor: pointer;
+}
+
+.registro-tarjeta-profesor .registro-subcampo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 12px 0 20px 27px;
+}
+
+.registro-tarjeta-profesor .registro-subcampo input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.registro-tarjeta-profesor .registro-campo h3 {
+  margin-bottom: 12px;
+  color: #244500;
+  font-size: 18px;
+}
+
+.registro-tarjeta-profesor .registro-campo p {
+  margin-bottom: 14px;
+}
+
+.registro-opciones-experiencia {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 28px;
+  margin: 12px 0 18px;
+}
+
+.registro-tarjeta-profesor .registro-opciones-experiencia .registro-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.registro-tarjeta-profesor .registro-opciones-experiencia input[type="radio"] {
+  appearance: auto;
+  width: 17px;
+  min-width: 17px;
+  height: 17px;
+  min-height: 17px;
+  margin: 0;
+  padding: 0;
+  accent-color: #244500;
+  cursor: pointer;
+}
+
+/* Botones y mensajes */
+
+.registro-boton {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 4px;
+}
+
+.registro-pie {
+  margin: 4px 0 0;
+  color: #526044;
+  text-align: center;
+  font-size: 14px;
+}
+
+.registro-enlace {
+  margin-left: 5px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #244500;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.registro-error,
+.registro-exito {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.registro-error {
+  background: #fff0ed;
+  color: #a52818;
+}
+
+.registro-exito {
+  background: #e9f7df;
+  color: #244500;
+}
+
+.registro-tarjeta-profesor .registro-boton,
+.registro-tarjeta-profesor .registro-pie,
+.registro-tarjeta-profesor .registro-error,
+.registro-tarjeta-profesor .registro-exito {
+  grid-column: 1 / -1;
+}
+
+/* Adaptación a pantallas pequeñas */
+
+@media (max-width: 750px) {
+  .registro-campo .registro-materias {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .registro-pagina {
+    padding: 24px 14px;
+  }
+
+  .registro-tarjeta {
+    padding: 24px 20px;
+  }
+
+  .registro-tarjeta-profesor {
+    padding: 28px 20px;
+  }
+
+  .registro-tarjeta-profesor .registro-formulario {
+    grid-template-columns: 1fr;
+  }
+
+  .registro-tarjeta-profesor .registro-campo-completo {
+    grid-column: auto;
+  }
+
+  .registro-tarjeta-profesor .registro-subcampo {
+    grid-template-columns: 1fr;
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .registro-campo .registro-materias {
+    grid-template-columns: 1fr;
+  }
+
+  .registro-opciones-experiencia {
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+}

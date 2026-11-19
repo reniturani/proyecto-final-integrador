@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { obtenerMaterias } from '../services/materias'
 
 function RegistroEstudiante({ onNavegar }) {
   const [formulario, setFormulario] = useState({
@@ -6,8 +7,29 @@ function RegistroEstudiante({ onNavegar }) {
     apellido: '',
     email: '',
     password: '',
-    confirmarPassword: ''
+    confirmarPassword: '',
+    materias:[],
+    presentacion: ''
   })
+
+  const [materiasDisponibles, setMateriasDisponibles] = useState([])
+
+useEffect(() => {
+  async function cargarMaterias() {
+    try {
+      const respuesta = await obtenerMaterias({
+        pagina: 1,
+        limite: 100
+      })
+
+      setMateriasDisponibles(respuesta.datos || [])
+    } catch (error) {
+      console.error('Error al cargar materias:', error)
+    }
+  }
+
+  cargarMaterias()
+}, [])
 
   const [error, setError] = useState('')
   const [mensaje, setMensaje] = useState('')
@@ -45,15 +67,15 @@ function RegistroEstudiante({ onNavegar }) {
       nombre: formulario.nombre,
       apellido: formulario.apellido,
       email: formulario.email,
-      materias: '',
-      presentacion: '',
+      materias: formulario.materias,
+      presentacion: formulario.presentacion,
       rol: 'estudiante'
     })
   }
 
   return (
     <div className="registro-pagina">
-      <div className="registro-tarjeta">
+      <div className="registro-tarjeta registro-tarjeta-profesor">
         <h1 className="registro-titulo">
           Crear cuenta de estudiante
         </h1>
@@ -105,6 +127,48 @@ function RegistroEstudiante({ onNavegar }) {
               required
             />
           </div>
+
+        <div className="registro-campo registro-campo-completo">
+  <label>Materias que te interesa aprender</label>
+
+  <div className="registro-materias">
+    {materiasDisponibles.map((materia) => (
+      <label key={materia.id_materia}>
+        <input
+          type="checkbox"
+          checked={formulario.materias.includes(materia.id_materia)}
+          onChange={(e) => {
+            const id = materia.id_materia
+
+            setFormulario((previo) => ({
+              ...previo,
+              materias: e.target.checked
+                ? [...previo.materias, id]
+                : previo.materias.filter((m) => m !== id)
+            }))
+          }}
+        />
+
+        {materia.nombre}
+      </label>
+    ))}
+  </div>
+</div>
+
+<div className="registro-campo registro-campo-completo">
+  <label htmlFor="presentacion">
+    Sobre mí
+  </label>
+
+  <textarea
+    id="presentacion"
+    name="presentacion"
+    value={formulario.presentacion}
+    onChange={manejarCambio}
+    placeholder="Contanos sobre tus intereses y objetivos de aprendizaje."
+    rows={4}
+  />
+</div>
 
           <div className="registro-campo">
             <label htmlFor="password">Contraseña</label>

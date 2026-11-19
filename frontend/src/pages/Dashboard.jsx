@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 
 import { obtenerMaterias } from '../services/materias'
 import { obtenerEstudiantes } from '../services/estudiantes'
+import { obtenerProfesores as obtenerProfesoresServicio } from '../services/profesores'
 
 function Dashboard({ onNavegar }) {
     const [estadisticas, setEstadisticas] = useState({
@@ -12,6 +13,7 @@ function Dashboard({ onNavegar }) {
         modalidades: {
             Virtual: 0,
             Presencial: 0,
+
             Mixta: 0
         }
     })
@@ -23,17 +25,13 @@ function Dashboard({ onNavegar }) {
             setCargando(true)
             setError('')
             try {
-                const token = localStorage.getItem('token')
-                const [respuestaProf, resMaterias, resEstudiantes] = await Promise.all([
-                    fetch('http://localhost:3000/api/profesores?page=1&limit=100', {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    }),
-                    obtenerMaterias({ limite: 100 }),
-                    obtenerEstudiantes({ limite: 1 })
+                const [resProfesores, resMaterias, resEstudiantes] = await Promise.all([
+                    obtenerProfesoresServicio({ pagina: 1, limite: 1000 }),
+                    obtenerMaterias({ pagina: 1, limite: 100 }),
+                    obtenerEstudiantes({ pagina: 1, limite: 1 })
                 ])
-
-                const resProfesores = await respuestaProf.json()
-                const listaProfesores = resProfesores.profesores || []
+                //const resProfesores = await respuestaProf.json() dejamos de usar fetch 
+                const listaProfesores = resProfesores.datos || []
                 const totalProf = resProfesores.totalRegistros ?? listaProfesores.length
                 const totalMat = resMaterias.totalRegistros || (resMaterias.datos ? resMaterias.datos.length : 0)
                 const totalEst = resEstudiantes.totalRegistros || 0
