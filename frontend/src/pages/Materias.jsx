@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo  } from 'react'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 
@@ -11,9 +11,6 @@ import {
 
 function Materias() {
     // estados para los datos y la tabla
-    const [materias, setMaterias] = useState([])
-    const [materiasFiltradas, setMateriasFiltradas] = useState([])
-    const [totalRegistros, setTotalRegistros] = useState(0)
     const [cargando, setCargando] = useState(true)
 
     // estados para paginacion, busqueda y filtros
@@ -35,40 +32,40 @@ function Materias() {
 
     // estados adicionales para manejar los datos localmente
     const [todasLasMaterias, setTodasLasMaterias] = useState([])
-   const obtenerMaterias = async () => {
-    setCargando(true)
+    const obtenerMaterias = useCallback(async () => {
+        setCargando(true)
 
-    try {
-        const respuesta = await obtenerMateriasServicio({
-            pagina: 1,
-            limite: 100
-        })
+        try {
+            const respuesta = await obtenerMateriasServicio({
+                pagina: 1,
+                limite: 100
+            })
 
-        setTodasLasMaterias(respuesta.datos || [])
-    } catch (error) {
-        console.error('Error al cargar materias:', error)
-        setTodasLasMaterias([])
-    } finally {
-        setCargando(false)
-    }
-}
-
-    // solo busca en el backend cuando entramos a la pagina o cuando guardamos/eliminamos algo
-    useEffect(() => {
-        obtenerMaterias()
+            setTodasLasMaterias(respuesta.datos || [])
+        } catch (error) {
+            console.error('Error al cargar materias:', error)
+            setTodasLasMaterias([])
+        } finally {
+            setCargando(false)
+        }
     }, [])
 
-    // filtra tildes, ordena alfabeticamente y pagina la tabla
     useEffect(() => {
+        const timer = setTimeout(() => {
+            obtenerMaterias()
+        }, 0)
+        return () => clearTimeout(timer)
+    }, [obtenerMaterias])
+
+    // filtra tildes, ordena alfabeticamente y pagina la tabla
+    const { materiasFiltradas, totalRegistros, materias } = useMemo(() => {
         let resultado = [...todasLasMaterias]
 
-        // Función para sacar tildes y mayúsculas
         const normalizar = (texto) => {
             if (!texto) return '';
             return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
         }
 
-        // busqueda
         if (busqueda) {
             const termino = normalizar(busqueda)
             resultado = resultado.filter(mat => 
@@ -89,14 +86,14 @@ function Materias() {
             return 0
         })
 
-        setTotalRegistros(resultado.length)
-        setMateriasFiltradas(resultado)
-
-        // paginacion
         const indiceInicio = (paginaActual - 1) * limite
         const indiceFin = indiceInicio + limite
-        setMaterias(resultado.slice(indiceInicio, indiceFin))
 
+        return {
+            materiasFiltradas: resultado,
+            totalRegistros: resultado.length,
+            materias: resultado.slice(indiceInicio, indiceFin)
+        }
     }, [todasLasMaterias, busqueda, paginaActual, limite, ordenarPor, direccionOrden])
 
     // generar PDF profesional

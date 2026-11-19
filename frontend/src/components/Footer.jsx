@@ -5,18 +5,6 @@ function Footer({ onNavegar }) {
         window.scrollTo({ top: 0, behavior: 'smooth' }); // Te lleva al techo de la página suavecito
     };
 
-    // funcion para ir a "quienes somos" y bajar especificamente hasta "¿como funciona?"
-    const irAComoFunciona = () => {
-        onNavegar('Quiénes somos');
-        
-        setTimeout(() => {
-        const seccion = document.getElementById('como-funciona');
-        if (seccion) {
-            seccion.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-        }, 100);
-    };
-
     return (
         <footer style={{ 
         background: 'var(--color-primary)', 
