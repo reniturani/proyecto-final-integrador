@@ -190,21 +190,20 @@ function MiPerfil({ perfilInicial }) {
             : 'Materias que te interesa aprender'}
     </label>
 
-    {perfil.rol === 'profesor' ? (
-    editando ? (
+    {editando ? (
         <div className="registro-materias">
             {materiasDisponibles.map((materia) => (
                 <label key={materia.id_materia}>
                     <input
                         type="checkbox"
                         checked={
-    (Array.isArray(formulario.materias)
-        ? formulario.materias
-        : String(formulario.materias || '').split(',')
-    ).some(
-        (id) => Number(id) === Number(materia.id_materia)
-    )
-}
+                            (Array.isArray(formulario.materias)
+                                ? formulario.materias
+                                : []
+                            ).some(
+                                (id) => Number(id) === Number(materia.id_materia)
+                            )
+                        }
                         onChange={(e) => {
                             const id = materia.id_materia
 
@@ -230,30 +229,20 @@ function MiPerfil({ perfilInicial }) {
         </div>
     ) : (
         <p>
-    {(Array.isArray(perfil.materias)
-        ? perfil.materias
-        : String(perfil.materias || '').split(',')
-    )
-        .map((id) =>
-            materiasDisponibles.find(
-                (materia) =>
-                    Number(materia.id_materia) === Number(id.trim())
-            )?.nombre
-        )
-        .filter(Boolean)
-        .join(', ')}
-</p>
-    )
-) : (
-    <input
-        id="perfil-materias"
-        name="materias"
-        value={formulario.materias}
-        onChange={manejarCambio}
-        disabled={!editando}
-        placeholder="Ej.: Programación, Matemática"
-    />
-)}
+            {(Array.isArray(perfil.materias)
+                ? perfil.materias
+                : []
+            )
+                .map((id) =>
+                    materiasDisponibles.find(
+                        (materia) =>
+                            Number(materia.id_materia) === Number(id)
+                    )?.nombre
+                )
+                .filter(Boolean)
+                .join(', ')}
+        </p>
+    )}
 </div>
 
               <div className="registro-campo perfil-campo-completo">
