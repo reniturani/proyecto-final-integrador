@@ -1,18 +1,64 @@
-
 import { useEffect, useState } from 'react'
+import { obtenerMaterias } from '../services/materias'
 
 function PerfilProfesor({ perfilInicial }) {
   const [editando, setEditando] = useState(false)
   const [mensaje, setMensaje] = useState('')
+  const [materiasDisponibles, setMateriasDisponibles] = useState([])
+
+useEffect(() => {
+    async function cargarMaterias() {
+        try {
+            const respuesta = await obtenerMaterias({
+                pagina: 1,
+                limite: 100
+            })
+
+            setMateriasDisponibles(respuesta.datos || [])
+        } catch (error) {
+            console.error('Error al cargar materias:', error)
+        }
+    }
+
+    cargarMaterias()
+}, [])
 
   const obtenerPerfil = () => ({
     nombre: perfilInicial?.nombre || '',
     apellido: perfilInicial?.apellido || '',
     email: perfilInicial?.email || '',
-    materias: perfilInicial?.materias || '',
+
+    materias: Array.isArray(perfilInicial?.materias)
+        ? perfilInicial.materias.map(Number)
+        : String(perfilInicial?.materias || '')
+            .split(',')
+            .map(id => Number(id.trim()))
+            .filter(id => Number.isFinite(id) && id > 0),
+
+    modalidad: perfilInicial?.modalidad || '',
     presentacion: perfilInicial?.presentacion || '',
-    experiencia: perfilInicial?.experiencia || ''
-  })
+
+    formacion: perfilInicial?.formacion || {
+        universitario: {
+            seleccionado: false,
+            titulo: '',
+            institucion: ''
+        },
+        terciario: {
+            seleccionado: false,
+            titulo: '',
+            institucion: ''
+        },
+        cursos: {
+            seleccionado: false,
+            titulo: '',
+            institucion: ''
+        }
+    },
+
+    tieneExperiencia: perfilInicial?.tieneExperiencia ?? null,
+    detalleExperiencia: perfilInicial?.detalleExperiencia || ''
+})
 
   const [perfil, setPerfil] = useState(obtenerPerfil)
   const [formulario, setFormulario] = useState(obtenerPerfil)
@@ -33,7 +79,42 @@ function PerfilProfesor({ perfilInicial }) {
       [name]: value
     }))
   }
+  const normalizarTexto = (texto) => {
+    return texto
+        .toLowerCase()
+        .replace(/(^\s*[a-záéíóúüñ]|[.!?]\s+[a-záéíóúüñ])/g, letra =>
+            letra.toUpperCase()
+        )
+        .trim()
+}
 
+const manejarNormalizacion = (e) => {
+    const { name, value } = e.target
+
+    if (!value.trim()) return
+
+    setFormulario(previo => ({
+        ...previo,
+        [name]: normalizarTexto(value)
+    }))
+}
+
+const manejarNormalizacionFormacion = (e, tipo, campo) => {
+    const valor = e.target.value
+
+    if (!valor.trim()) return
+
+    setFormulario(previo => ({
+        ...previo,
+        formacion: {
+            ...previo.formacion,
+            [tipo]: {
+                ...previo.formacion[tipo],
+                [campo]: normalizarTexto(valor)
+            }
+        }
+    }))
+}
   const guardarCambios = (e) => {
     e.preventDefault()
 
@@ -114,6 +195,7 @@ function PerfilProfesor({ perfilInicial }) {
                   name="nombre"
                   value={formulario.nombre}
                   onChange={manejarCambio}
+                  onBlur={manejarNormalizacion}
                   disabled={!editando}
                   required
                 />
@@ -126,6 +208,7 @@ function PerfilProfesor({ perfilInicial }) {
                   name="apellido"
                   value={formulario.apellido}
                   onChange={manejarCambio}
+                  onBlur={manejarNormalizacion}
                   disabled={!editando}
                   required
                 />
@@ -145,19 +228,68 @@ function PerfilProfesor({ perfilInicial }) {
               </div>
 
               <div className="registro-campo perfil-campo-completo">
-                <label htmlFor="profesor-materias">
-                  Materias que enseñás
+    <label>Materias que enseñás</label>
+
+    {editando ? (
+        <div className="registro-materias">
+            {materiasDisponibles.map((materia) => (
+                <label key={materia.id_materia}>
+                    <input
+                        type="checkbox"
+                        checked={formulario.materias.includes(
+                            Number(materia.id_materia)
+                        )}
+                        onChange={(e) => {
+                            const id = Number(materia.id_materia)
+
+                            setFormulario(previo => ({
+                                ...previo,
+                                materias: e.target.checked
+                                    ? [...previo.materias, id]
+                                    : previo.materias.filter(m => m !== id)
+                            }))
+                        }}
+                    />
+                    {materia.nombre}
                 </label>
-                <input
-                  id="profesor-materias"
-                  name="materias"
-                  value={formulario.materias}
-                  onChange={manejarCambio}
-                  disabled={!editando}
-                  placeholder="Ej.: Matemática, Física, Programación"
-                  required
-                />
-              </div>
+            ))}
+        </div>
+    ) : (
+        <p>
+            {perfil.materias
+                .map(id =>
+                    materiasDisponibles.find(
+                        materia => Number(materia.id_materia) === Number(id)
+                    )?.nombre
+                )
+                .filter(Boolean)
+                .join(', ')}
+        </p>
+    )}
+</div>
+
+<div className="registro-campo perfil-campo-completo">
+    <label htmlFor="profesor-modalidad">
+        Modalidad de enseñanza
+    </label>
+
+    {editando ? (
+        <select
+            id="profesor-modalidad"
+            name="modalidad"
+            value={formulario.modalidad}
+            onChange={manejarCambio}
+            required
+        >
+            <option value="">Seleccioná una modalidad</option>
+            <option value="Virtual">Virtual</option>
+            <option value="Presencial">Presencial</option>
+            <option value="Mixta">Mixta</option>
+        </select>
+    ) : (
+        <p>{perfil.modalidad || 'Sin modalidad especificada'}</p>
+    )}
+</div>
 
               <div className="registro-campo perfil-campo-completo">
                 <label htmlFor="profesor-presentacion">
@@ -168,6 +300,7 @@ function PerfilProfesor({ perfilInicial }) {
                   name="presentacion"
                   value={formulario.presentacion}
                   onChange={manejarCambio}
+                  onBlur={manejarNormalizacion}
                   disabled={!editando}
                   rows={4}
                   placeholder="Contanos sobre tu forma de enseñar."
@@ -175,20 +308,183 @@ function PerfilProfesor({ perfilInicial }) {
                 />
               </div>
 
-              <div className="registro-campo perfil-campo-completo">
-                <label htmlFor="profesor-experiencia">
-                  Experiencia y formación
+              
+<div className="registro-campo perfil-campo-completo">
+    <h3>Formación académica</h3>
+
+    {['universitario', 'terciario', 'cursos'].map((tipo) => {
+        const nombres = {
+            universitario: 'Título universitario',
+            terciario: 'Título terciario',
+            cursos: 'Cursos realizados'
+        }
+
+        const formacion = editando
+            ? formulario.formacion
+            : perfil.formacion
+
+        const datos = formacion[tipo]
+
+        if (!editando && !datos.seleccionado) {
+    return null
+}
+
+return (
+    <div key={tipo} className="perfil-formacion-item">
+                {editando ? (
+                    <>
+                        <label className="registro-checkbox">
+                            <input
+                                type="checkbox"
+                                checked={datos.seleccionado}
+                                onChange={(e) => {
+                                    setFormulario(previo => ({
+                                        ...previo,
+                                        formacion: {
+                                            ...previo.formacion,
+                                            [tipo]: {
+                                                ...previo.formacion[tipo],
+                                                seleccionado: e.target.checked
+                                            }
+                                        }
+                                    }))
+                                }}
+                            />
+                            {nombres[tipo]}
+                        </label>
+
+                        {datos.seleccionado && (
+                            <div className="registro-subcampo">
+                                <input
+                                    type="text"
+                                    placeholder="Nombre del título, carrera o curso"
+                                    value={datos.titulo}
+                                    required
+                                    onChange={(e) => {
+                                        setFormulario(previo => ({
+                                            ...previo,
+                                            formacion: {
+                                                ...previo.formacion,
+                                                [tipo]: {
+                                                    ...previo.formacion[tipo],
+                                                    titulo: e.target.value
+                                                }
+                                            }
+                                        }))
+                                    }}
+                                    onBlur={(e) => manejarNormalizacionFormacion(e, tipo, 'titulo')}
+                                />
+
+                                <input
+                                    type="text"
+                                    placeholder="Universidad o institución"
+                                    value={datos.institucion}
+                                    required
+                                    onChange={(e) => {
+                                        setFormulario(previo => ({
+                                            ...previo,
+                                            formacion: {
+                                                ...previo.formacion,
+                                                [tipo]: {
+                                                    ...previo.formacion[tipo],
+                                                    institucion: e.target.value
+                                                }
+                                            }
+                                        }))
+                                    }}
+                                    onBlur={(e) => manejarNormalizacionFormacion(e, tipo, 'institucion')}
+                                />
+                            </div>
+                        )}
+                    </>
+                ) : (
+                    datos.seleccionado && (
+                        <div>
+                            <strong>{nombres[tipo]}</strong>
+                            <p>{datos.titulo}</p>
+                            <p>{datos.institucion}</p>
+                        </div>
+                    )
+                )}
+            </div>
+        )
+    })}
+
+    {!editando &&
+        !Object.values(perfil.formacion).some(item => item.seleccionado) && (
+            <p>Sin formación académica especificada.</p>
+        )}
+</div>
+
+<div className="registro-campo perfil-campo-completo">
+    <h3>Experiencia laboral</h3>
+
+    {editando ? (
+        <>
+            <p>¿Tenés experiencia dando clases?</p>
+
+            <div className="registro-opciones-experiencia">
+                <label className="registro-checkbox">
+                    <input
+                        type="checkbox"
+                        checked={formulario.tieneExperiencia === true}
+                        onChange={() => {
+                            setFormulario(previo => ({
+                                ...previo,
+                                tieneExperiencia:
+                                    previo.tieneExperiencia === true ? null : true
+                            }))
+                        }}
+                    />
+                    Sí, tengo experiencia
                 </label>
+
+                <label className="registro-checkbox">
+                    <input
+                        type="checkbox"
+                        checked={formulario.tieneExperiencia === false}
+                        onChange={() => {
+                            setFormulario(previo => ({
+                                ...previo,
+                                tieneExperiencia:
+                                    previo.tieneExperiencia === false ? null : false,
+                                detalleExperiencia: ''
+                            }))
+                        }}
+                    />
+                    No tengo experiencia
+                </label>
+            </div>
+
+            {formulario.tieneExperiencia === true && (
                 <textarea
-                  id="profesor-experiencia"
-                  name="experiencia"
-                  value={formulario.experiencia}
-                  onChange={manejarCambio}
-                  disabled={!editando}
-                  rows={3}
-                  placeholder="Describí tu experiencia o formación."
+                    name="detalleExperiencia"
+                    value={formulario.detalleExperiencia}
+                    onChange={manejarCambio}
+                    onBlur={manejarNormalizacion}
+                    placeholder="Contanos dónde trabajaste, qué materias enseñaste y cuánto tiempo de experiencia tenés."
+                    rows={4}
+                    required
                 />
-              </div>
+            )}
+        </>
+    ) : (
+        <>
+            <p>
+                {perfil.tieneExperiencia === true
+                    ? 'Sí, tengo experiencia'
+                    : perfil.tieneExperiencia === false
+                        ? 'No tengo experiencia'
+                        : 'Sin información especificada'}
+            </p>
+
+            {perfil.tieneExperiencia === true && (
+                <p>{perfil.detalleExperiencia}</p>
+            )}
+        </>
+    )}
+</div>
+
             </div>
 
             {editando && (

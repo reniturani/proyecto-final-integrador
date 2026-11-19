@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { obtenerMaterias } from '../services/materias'
 
 function MiPerfil({ perfilInicial }) {
   const [editando, setEditando] = useState(false)
@@ -9,8 +10,28 @@ function MiPerfil({ perfilInicial }) {
     apellido: perfilInicial?.apellido || '',
     email: perfilInicial?.email || '',
     materias: perfilInicial?.materias || '',
+    modalidad: perfilInicial?.modalidad || '',
+      rol: perfilInicial?.rol || 'estudiante',
     presentacion: perfilInicial?.presentacion || ''
   }))
+  const [materiasDisponibles, setMateriasDisponibles] = useState([])
+  useEffect(() => {
+    async function cargarMaterias() {
+        try {
+            const respuesta = await obtenerMaterias({
+                pagina: 1,
+                limite: 100
+            })
+            setMateriasDisponibles(respuesta.datos || [])
+        } catch (error) {
+            console.error('Error al cargar materias:', error)
+        }
+    }
+
+    cargarMaterias()
+}, [])
+
+
 
   const [formulario, setFormulario] = useState(perfil)
 
@@ -20,7 +41,10 @@ function MiPerfil({ perfilInicial }) {
       apellido: perfilInicial?.apellido || '',
       email: perfilInicial?.email || '',
       materias: perfilInicial?.materias || '',
-      presentacion: perfilInicial?.presentacion || ''
+      modalidad: perfilInicial?.modalidad || '',
+      rol: perfilInicial?.rol || 'estudiante',
+      presentacion: perfilInicial?.presentacion || '',
+      
     }
 
     setPerfil(nuevoPerfil)
@@ -104,7 +128,7 @@ function MiPerfil({ perfilInicial }) {
 
               <p>{perfil.email}</p>
 
-              <span className="perfil-rol">Estudiante</span>
+              <span className="perfil-rol">{perfil.rol === 'profesor' ? 'Profesor' : 'Estudiante'}</span>
             </div>
           </div>
 
@@ -160,24 +184,84 @@ function MiPerfil({ perfilInicial }) {
               </div>
 
               <div className="registro-campo perfil-campo-completo">
-                <label htmlFor="perfil-materias">
-                  Materias que te interesa aprender
-                </label>
+    <label htmlFor="perfil-materias">
+        {perfil.rol === 'profesor'
+            ? 'Materias que enseñás'
+            : 'Materias que te interesa aprender'}
+    </label>
 
-                <input
-                  id="perfil-materias"
-                  name="materias"
-                  value={formulario.materias}
-                  onChange={manejarCambio}
-                  disabled={!editando}
-                  placeholder="Ej.: Programación, Matemática"
-                />
-              </div>
+    {perfil.rol === 'profesor' ? (
+    editando ? (
+        <div className="registro-materias">
+            {materiasDisponibles.map((materia) => (
+                <label key={materia.id_materia}>
+                    <input
+                        type="checkbox"
+                        checked={
+    (Array.isArray(formulario.materias)
+        ? formulario.materias
+        : String(formulario.materias || '').split(',')
+    ).some(
+        (id) => Number(id) === Number(materia.id_materia)
+    )
+}
+                        onChange={(e) => {
+                            const id = materia.id_materia
+
+                            setFormulario((previo) => {
+                                const materiasActuales = Array.isArray(previo.materias)
+                                    ? previo.materias
+                                    : []
+
+                                return {
+                                    ...previo,
+                                    materias: e.target.checked
+                                        ? [...materiasActuales, id]
+                                        : materiasActuales.filter(
+                                            (m) => Number(m) !== Number(id)
+                                        )
+                                }
+                            })
+                        }}
+                    />
+                    {materia.nombre}
+                </label>
+            ))}
+        </div>
+    ) : (
+        <p>
+    {(Array.isArray(perfil.materias)
+        ? perfil.materias
+        : String(perfil.materias || '').split(',')
+    )
+        .map((id) =>
+            materiasDisponibles.find(
+                (materia) =>
+                    Number(materia.id_materia) === Number(id.trim())
+            )?.nombre
+        )
+        .filter(Boolean)
+        .join(', ')}
+</p>
+    )
+) : (
+    <input
+        id="perfil-materias"
+        name="materias"
+        value={formulario.materias}
+        onChange={manejarCambio}
+        disabled={!editando}
+        placeholder="Ej.: Programación, Matemática"
+    />
+)}
+</div>
 
               <div className="registro-campo perfil-campo-completo">
                 <label htmlFor="perfil-presentacion">
-                  Sobre mí
-                </label>
+    {perfil.rol === 'profesor'
+        ? 'Presentación profesional'
+        : 'Sobre mí'}
+</label>
 
                 <textarea
                   id="perfil-presentacion"
