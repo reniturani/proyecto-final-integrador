@@ -194,11 +194,17 @@ function Aprender({ perfilActual }) { //function Aprender
                                                 ${profesor.precio_hora} 
 
                                                 {puedeContactar && profesor.email && (
-                                                    <a
-                                                    href={enlaceCorreo}
-                                                    className="aprender-boton" > Contactar profesor
-                                                    </a>
-                                                )}
+    <a
+        href={enlaceCorreo}
+        className="aprender-boton aprender-boton-contacto"
+        target="_blank"
+        rel="noopener noreferrer"
+    >
+        <span>Contactar profesor</span>
+        <span>✉</span>
+    </a>
+)}
+                                                
                                             </p>
                                         )}
                                     </div>
