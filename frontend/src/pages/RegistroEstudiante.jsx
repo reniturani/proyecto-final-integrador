@@ -9,8 +9,15 @@ function RegistroEstudiante({ onNavegar }) {
     password: '',
     confirmarPassword: '',
     materias:[],
-    presentacion: ''
+    presentacion: '',
   })
+  const formatearNombre = (texto) => {
+  return texto
+    .trim()
+    .toLowerCase()
+    .replace(/\b\p{L}/gu, (letra) => letra.toUpperCase())
+}
+  
 
   const [materiasDisponibles, setMateriasDisponibles] = useState([])
 
@@ -47,6 +54,27 @@ useEffect(() => {
     e.preventDefault()
     setError('')
     setMensaje('')
+    const presentacion = formulario.presentacion.trim()
+
+if (presentacion.length < 30) {
+    setError('La presentación debe tener al menos 30 caracteres.')
+    return
+}
+
+if (presentacion.length > 500) {
+    setError('La presentación no puede superar los 500 caracteres.')
+    return
+}
+
+if (!/[a-zA-ZáéíóúÁÉÍÓÚñÑ]/.test(presentacion)) {
+    setError('La presentación debe contener texto válido.')
+    return
+}
+
+if (/(.)\1{5,}/i.test(presentacion.replace(/\s/g, ''))) {
+    setError('La presentación contiene demasiados caracteres repetidos.')
+    return
+}
 
     if (formulario.password.length < 8) {
       setError('La contraseña debe tener al menos 8 caracteres.')
@@ -64,13 +92,13 @@ useEffect(() => {
     localStorage.setItem('usuarioRol', 'estudiante')
     
     onNavegar('Mi perfil', {
-      nombre: formulario.nombre,
-      apellido: formulario.apellido,
-      email: formulario.email,
-      materias: formulario.materias,
-      presentacion: formulario.presentacion,
-      rol: 'estudiante'
-    })
+    nombre: formatearNombre(formulario.nombre),
+    apellido: formatearNombre(formulario.apellido),
+    email: formulario.email.trim().toLowerCase(),
+    materias: formulario.materias,
+    presentacion: formulario.presentacion.trim(),
+    rol: 'estudiante'
+})
   }
 
   return (
