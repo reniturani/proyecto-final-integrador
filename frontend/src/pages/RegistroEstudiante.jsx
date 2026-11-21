@@ -47,6 +47,7 @@ useEffect(() => {
     e.preventDefault()
     setError('')
     setMensaje('')
+    
 
     if (formulario.password.length < 8) {
       setError('La contraseña debe tener al menos 8 caracteres.')

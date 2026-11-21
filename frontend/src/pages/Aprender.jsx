@@ -4,7 +4,7 @@ import '../styles/aprender.css'
 import { obtenerMaterias } from '../services/materias'
 import { buscarProfesores as consultarProfesores } from '../services/profesores'
 
-function Aprender() {
+function Aprender({ perfilActual }) { //function Aprender
     const [materias, setMaterias] = useState([])
     const [materiaSeleccionada, setMateriaSeleccionada] = useState('')
     const [modalidadSeleccionada, setModalidadSeleccionada] = useState('')
@@ -12,6 +12,7 @@ function Aprender() {
     const [error, setError] = useState('')
     const [busquedaRealizada, setBusquedaRealizada] = useState(false)
     const [buscando, setBuscando] = useState(false)
+    const puedeContactar = perfilActual?.rol === 'estudiante' //nada
     
     
     useEffect(() => {
@@ -130,9 +131,19 @@ function Aprender() {
                     <div className="profesores-lista">
                         {profesores.map((profesor) => {
                             const materiasProfesor =
-                                profesor.Materias || profesor.materias || []
+                                profesor.Materias || profesor.materias || [] //hasta aca
 
-                            return (
+                                const asunto = `Consulta por clases de ${materiaSeleccionada || 'una materia'}`
+                                const cuerpo = `Hola ${profesor.nombre},
+                                Mi nombre es ${perfilActual?.nombre || ''} ${perfilActual?.apellido || ''}.
+                                Estoy interesado/a en recibir clases de ${materiaSeleccionada || 'una materia'}.
+                                Modalidad de interés: ${modalidadSeleccionada || 'A convenir'}.
+                                Mi email es: ${perfilActual?.email || ''}
+                                ¡Muchas gracias!`
+                                const enlaceCorreo = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(profesor.email)}&su=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`
+                            
+                            
+                                return (
                                 <article
                                     className="profesor-tarjeta"
                                     key={profesor.id_profesor}
@@ -155,13 +166,11 @@ function Aprender() {
                                         )}
                                         
                                         {profesor.email && (
-                                            <p>
-                                                <strong>Email:</strong>{' '}
-                                                <a href={`mailto:${profesor.email}`}>
-                                                    {profesor.email}
-                                                    </a>
-                                                    </p>
-                                                )}
+    <p>
+        <strong>Email:</strong>{' '}
+        {profesor.email}
+    </p>
+)}
 
                                         {materiasProfesor.length > 0 && (
                                             <p>
@@ -181,8 +190,15 @@ function Aprender() {
 
                                         {profesor.precio_hora != null && (
                                             <p>
-                                                <strong>Precio por hora:</strong>{' '}
-                                                ${profesor.precio_hora}
+                                                <strong>Precio por hora:</strong>{' '}//
+                                                ${profesor.precio_hora} 
+
+                                                {puedeContactar && profesor.email && (
+                                                    <a
+                                                    href={enlaceCorreo}
+                                                    className="aprender-boton" > Contactar profesor
+                                                    </a>
+                                                )}
                                             </p>
                                         )}
                                     </div>

@@ -57,10 +57,8 @@ function App() {
 
         {paginaActual === 'Recuperar contraseña' && (<RecuperarPassword onNavegar={setPaginaActual} setTokenRecuperacion={setTokenRecuperacion}/>)}       
         {paginaActual === 'Restablecer contraseña' && (<RestablecerPassword onNavegar={setPaginaActual} tokenRecuperacion={tokenRecuperacion}/>)}  
-              {paginaActual === 'Aprender' && <Aprender />}
-{paginaActual === 'Mi perfil' && perfilActual?.rol === 'estudiante' && (
-  <MiPerfil perfilInicial={perfilActual} />
-)}
+        {paginaActual === 'Aprender' && (<Aprender perfilActual={perfilActual}/>)} 
+        {paginaActual === 'Mi perfil' && perfilActual?.rol === 'estudiante' && (<MiPerfil perfilInicial={perfilActual} />)}
 
 {paginaActual === 'Mi perfil' && perfilActual?.rol === 'profesor' && (
   <PerfilProfesor perfilInicial={perfilActual} />
