@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { obtenerMaterias } from '../services/materias'
 
-function MiPerfil({ perfilInicial }) {
+function MiPerfil({ perfilInicial, actualizarPerfil }) {
   const [editando, setEditando] = useState(false)
   const [mensaje, setMensaje] = useState('')
 
@@ -32,24 +32,7 @@ function MiPerfil({ perfilInicial }) {
 }, [])
 
 
-
   const [formulario, setFormulario] = useState(perfil)
-
-  useEffect(() => {
-    const nuevoPerfil = {
-      nombre: perfilInicial?.nombre || '',
-      apellido: perfilInicial?.apellido || '',
-      email: perfilInicial?.email || '',
-      materias: perfilInicial?.materias || '',
-      modalidad: perfilInicial?.modalidad || '',
-      rol: perfilInicial?.rol || 'estudiante',
-      presentacion: perfilInicial?.presentacion || '',
-      
-    }
-
-    setPerfil(nuevoPerfil)
-    setFormulario(nuevoPerfil)
-  }, [perfilInicial])
 
   const manejarCambio = (e) => {
     const { name, value } = e.target
@@ -63,12 +46,16 @@ function MiPerfil({ perfilInicial }) {
   const guardarCambios = (e) => {
     e.preventDefault()
 
-    setPerfil({ ...formulario })
+    const nuevosDatos = { ...formulario }
+
+    setPerfil(nuevosDatos)
+    actualizarPerfil(nuevosDatos)
+
     setEditando(false)
     setMensaje('¡Tu perfil se actualizó correctamente!')
 
     setTimeout(() => setMensaje(''), 3000)
-  }
+}
 
   const cancelarEdicion = () => {
     setFormulario({ ...perfil })

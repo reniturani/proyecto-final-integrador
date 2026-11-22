@@ -34,6 +34,10 @@ function App() {
     setPaginaActual(pagina)
   }
 
+  const actualizarPerfil = (nuevosDatos) => {
+    setPerfilActual(nuevosDatos)
+  }
+
   return (
     <div className={menuAbierto ? 'app menu-abierto' : 'app'}>
       <Navbar
@@ -58,7 +62,7 @@ function App() {
         {paginaActual === 'Recuperar contraseña' && (<RecuperarPassword onNavegar={setPaginaActual} setTokenRecuperacion={setTokenRecuperacion}/>)}       
         {paginaActual === 'Restablecer contraseña' && (<RestablecerPassword onNavegar={setPaginaActual} tokenRecuperacion={tokenRecuperacion}/>)}  
         {paginaActual === 'Aprender' && (<Aprender perfilActual={perfilActual}/>)} 
-        {paginaActual === 'Mi perfil' && perfilActual?.rol === 'estudiante' && (<MiPerfil perfilInicial={perfilActual} />)}
+        {paginaActual === 'Mi perfil' && perfilActual?.rol === 'estudiante' && (<MiPerfil perfilInicial={perfilActual} actualizarPerfil={actualizarPerfil}/>)}
 
 {paginaActual === 'Mi perfil' && perfilActual?.rol === 'profesor' && (
   <PerfilProfesor perfilInicial={perfilActual} />
