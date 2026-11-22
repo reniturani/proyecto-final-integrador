@@ -54,7 +54,32 @@ useEffect(() => {
     e.preventDefault()
     setError('')
     setMensaje('')
-    const presentacion = formulario.presentacion.trim()
+
+  const presentacion = formulario.presentacion.trim()
+
+  const textoPresentacion = presentacion.toLowerCase()
+
+  const expresionesProfesor = [
+    'soy profesor',
+    'soy profesora',
+    'soy docente',
+    'soy tutor',
+    'soy tutora',
+    'doy clases',
+    'dicto clases',
+    'enseño',
+    'mi metodología de enseñanza',
+    'mi experiencia docente',
+    'experiencia como profesor',
+    'experiencia como profesora',
+    'mis alumnos',
+    'mis estudiantes'
+  ]
+
+if (expresionesProfesor.some(expresion => textoPresentacion.includes(expresion))) {
+    setError('La presentación debe describir tu perfil como estudiante, tus intereses y tus objetivos de aprendizaje.')
+    return
+}
 
 if (presentacion.length < 30) {
     setError('La presentación debe tener al menos 30 caracteres.')
