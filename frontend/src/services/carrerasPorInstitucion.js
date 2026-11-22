@@ -96,9 +96,38 @@ return clave ? carrerasPorInstitucion[clave] : null;
 };
 
 export const obtenerTodasLasCarreras = (nombreInstitucion) => {
-const datos = obtenerCarrerasPorInstitucion(nombreInstitucion);
-if (!datos) return [];
-return [...datos.grado, ...datos.pregrado, ...datos.profesorados, ...datos.ciclos, ...datos.posgrado, ...datos.diplomaturas];
+    const datos = obtenerCarrerasPorInstitucion(nombreInstitucion);
+    if (!datos) return [];
+
+    return [
+        ...datos.grado,
+        ...datos.pregrado,
+        ...datos.profesorados, 
+        ...datos.ciclos, 
+        ...datos.posgrado, 
+        ...datos.diplomaturas];
 };
 
+export const obtenerInstitucionesPorCarrera = (carreraBuscada) => {
+    if (!carreraBuscada?.trim()) return []
+
+    const busqueda = normalizar(carreraBuscada)
+
+    return Object.entries(carrerasPorInstitucion)
+        .filter(([nombre, oferta]) => {
+            const todasLasCarreras = [
+                ...(oferta.grado || []),
+                ...(oferta.pregrado || []),
+                ...(oferta.profesorados || []),
+                ...(oferta.ciclos || []),
+                ...(oferta.posgrado || []),
+                ...(oferta.diplomaturas || [])
+            ]
+
+            return todasLasCarreras.some(carrera =>
+                normalizar(carrera).includes(busqueda)
+            )
+        })
+        .map(([nombre]) => ({ nombre }))
+}
 export default carrerasPorInstitucion;

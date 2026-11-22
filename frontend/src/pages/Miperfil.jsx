@@ -19,6 +19,7 @@ function MiPerfil({ perfilInicial, actualizarPerfil }) {
     materias: perfilInicial?.materias || '',
     modalidad: perfilInicial?.modalidad || '',
       rol: perfilInicial?.rol || 'estudiante',
+      formacion: perfilInicial?.formacion || {},
     presentacion: perfilInicial?.presentacion || ''
   }))
   const [materiasDisponibles, setMateriasDisponibles] = useState([])
@@ -242,8 +243,40 @@ function MiPerfil({ perfilInicial, actualizarPerfil }) {
                 .join(', ')}
         </p>
     )}
-</div>
+</div> 
+{perfil.rol === 'profesor' && (
+    <div className="registro-campo perfil-campo-completo">
+        <h3>Formación académica</h3>
 
+        {['universitario', 'terciario', 'cursos'].map((tipo) => {
+            const formacion = formulario.formacion?.[tipo]
+
+            if (!formacion?.seleccionado) return null
+
+            return (
+                <div key={tipo} className="perfil-formacion-item">
+                    <strong>
+                        {tipo === 'universitario'
+                            ? 'Formación universitaria'
+                            : tipo === 'terciario'
+                                ? 'Formación terciaria'
+                                : 'Cursos realizados'}
+                    </strong>
+
+                    <p>{formacion.titulo}</p>
+
+                    {formacion.carrera && (
+                        <p>Carrera: {formacion.carrera}</p>
+                    )}
+
+                    {formacion.institucion && (
+                        <p>Institución: {formacion.institucion}</p>
+                    )}
+                </div>
+            )
+        })}
+    </div>
+)}
               <div className="registro-campo perfil-campo-completo">
                 <label htmlFor="perfil-presentacion">
     {perfil.rol === 'profesor'
