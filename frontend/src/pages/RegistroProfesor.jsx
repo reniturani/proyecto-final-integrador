@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { obtenerMaterias } from '../services/materias'
 import { obtenerInstituciones } from '../services/instituciones'
 
+
 function RegistroProfesor({ onNavegar }) {
     const [formulario, setFormulario] = useState({
         nombre: '',
@@ -167,6 +168,28 @@ const validarFormacion = (texto) => {
         setMensaje('')
 
         const presentacion = formulario.presentacion.trim()
+
+        const textoPresentacion = presentacion.toLowerCase()
+
+        const expresionesEstudiante = [ //validacion para que no se pueda registrar un estudiante como profesor
+            'estoy estudiando',
+            'estudiante',
+            'estudio',
+            'estudiar',
+            'soy estudiante',
+            'busco aprender',
+            'quiero aprender',
+            'quiero estudiar',
+            'busco reforzar',
+            'mis materias',
+            'mis estudios',
+            'preparar mis examenes',
+            'preparar mis exámenes'
+        ]
+        if (expresionesEstudiante.some(expresion => textoPresentacion.includes(expresion))) {
+            setError('La presentación debe describir tu perfil como profesor, tu experiencia o tu metodología de enseñanza.')
+            return
+        }
 
         if (presentacion.length < 30) {
             setError('La presentación profesional debe tener al menos 30 caracteres.')
