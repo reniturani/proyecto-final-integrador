@@ -5,6 +5,13 @@ function MiPerfil({ perfilInicial, actualizarPerfil }) {
   const [editando, setEditando] = useState(false)
   const [mensaje, setMensaje] = useState('')
 
+  const formatearNombre = (texto) => {
+    return texto
+        .trim()
+        .toLowerCase()
+        .replace(/\b\p{L}/gu, (letra) => letra.toUpperCase())
+}
+
   const [perfil, setPerfil] = useState(() => ({
     nombre: perfilInicial?.nombre || '',
     apellido: perfilInicial?.apellido || '',
@@ -46,9 +53,14 @@ function MiPerfil({ perfilInicial, actualizarPerfil }) {
   const guardarCambios = (e) => {
     e.preventDefault()
 
-    const nuevosDatos = { ...formulario }
+    const nuevosDatos = {
+        ...formulario,
+        nombre: formatearNombre(formulario.nombre),
+        apellido: formatearNombre(formulario.apellido)
+    }
 
     setPerfil(nuevosDatos)
+    setFormulario(nuevosDatos)
     actualizarPerfil(nuevosDatos)
 
     setEditando(false)

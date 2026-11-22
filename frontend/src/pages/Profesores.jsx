@@ -96,7 +96,6 @@ import { obtenerMaterias as obtenerMateriasServicio } from '../services/materias
         return () => clearTimeout(timer)
     }, [obtenerProfesores])
 
-    // generar PDF 
     
 // Generar PDF
 const exportarPDF = async () => {
