@@ -73,6 +73,12 @@ function RegistroProfesor({ onNavegar }) {
             )
             .trim()
     }
+    const formatearNombre = (texto) => {
+    return texto
+        .trim()
+        .toLowerCase()
+        .replace(/\b\p{L}/gu, (letra) => letra.toUpperCase());
+};
 
 const validarFormacion = (texto) => {
     const valor = texto.trim();
@@ -200,8 +206,8 @@ const validarFormacion = (texto) => {
         localStorage.setItem('usuarioRol', 'profesor')
 
         onNavegar('Mi perfil', {
-            nombre: formulario.nombre,
-            apellido: formulario.apellido,
+            nombre: formatearNombre(formulario.nombre),
+            apellido: formatearNombre(formulario.apellido),
             email: formulario.email,
             materias: formulario.materias,
             modalidad: formulario.modalidad,
