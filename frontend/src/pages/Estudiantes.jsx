@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import {
@@ -36,7 +36,7 @@ function Estudiantes() {
 
     const totalPaginas = Math.max(1, Math.ceil(totalRegistros / limite))
 
-    const cargarEstudiantes = async () => {
+    const cargarEstudiantes = useCallback(async () => {
         setCargando(true)
         setError('')
 
@@ -59,7 +59,7 @@ function Estudiantes() {
         } finally {
             setCargando(false)
         }
-    }
+    } , [paginaActual, limite, busqueda, ordenarPor, direccionOrden])
 
     useEffect(() => {
         const temporizador = setTimeout(() => {
@@ -67,7 +67,7 @@ function Estudiantes() {
         }, 300)
 
         return () => clearTimeout(temporizador)
-    }, [paginaActual, limite, busqueda, ordenarPor, direccionOrden])
+    }, [paginaActual, limite, busqueda, ordenarPor, direccionOrden, cargarEstudiantes])
 
     const abrirFormularioCrear = () => {
         setEstudianteEditando(null)
