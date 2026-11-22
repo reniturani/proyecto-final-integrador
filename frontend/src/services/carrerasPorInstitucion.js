@@ -114,7 +114,7 @@ export const obtenerInstitucionesPorCarrera = (carreraBuscada) => {
     const busqueda = normalizar(carreraBuscada)
 
     return Object.entries(carrerasPorInstitucion)
-        .filter(([nombre, oferta]) => {
+        .filter(([oferta]) => {
             const todasLasCarreras = [
                 ...(oferta.grado || []),
                 ...(oferta.pregrado || []),
