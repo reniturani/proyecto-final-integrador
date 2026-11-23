@@ -9,8 +9,15 @@ function RegistroEstudiante({ onNavegar }) {
     password: '',
     confirmarPassword: '',
     materias:[],
-    presentacion: ''
+    presentacion: '',
   })
+  const formatearNombre = (texto) => {
+  return texto
+    .trim()
+    .toLowerCase()
+    .replace(/\b\p{L}/gu, (letra) => letra.toUpperCase())
+}
+  
 
   const [materiasDisponibles, setMateriasDisponibles] = useState([])
 
@@ -48,6 +55,52 @@ useEffect(() => {
     setError('')
     setMensaje('')
 
+  const presentacion = formulario.presentacion.trim()
+
+  const textoPresentacion = presentacion.toLowerCase()
+
+  const expresionesProfesor = [
+    'soy profesor',
+    'soy profesora',
+    'soy docente',
+    'soy tutor',
+    'soy tutora',
+    'doy clases',
+    'dicto clases',
+    'enseño',
+    'mi metodología de enseñanza',
+    'mi experiencia docente',
+    'experiencia como profesor',
+    'experiencia como profesora',
+    'mis alumnos',
+    'mis estudiantes'
+  ]
+
+if (expresionesProfesor.some(expresion => textoPresentacion.includes(expresion))) {
+    setError('La presentación debe describir tu perfil como estudiante, tus intereses y tus objetivos de aprendizaje.')
+    return
+}
+
+if (presentacion.length < 30) {
+    setError('La presentación debe tener al menos 30 caracteres.')
+    return
+}
+
+if (presentacion.length > 500) {
+    setError('La presentación no puede superar los 500 caracteres.')
+    return
+}
+
+if (!/[a-zA-ZáéíóúÁÉÍÓÚñÑ]/.test(presentacion)) {
+    setError('La presentación debe contener texto válido.')
+    return
+}
+
+if (/(.)\1{5,}/i.test(presentacion.replace(/\s/g, ''))) {
+    setError('La presentación contiene demasiados caracteres repetidos.')
+    return
+}
+
     if (formulario.password.length < 8) {
       setError('La contraseña debe tener al menos 8 caracteres.')
       return
@@ -64,13 +117,13 @@ useEffect(() => {
     localStorage.setItem('usuarioRol', 'estudiante')
     
     onNavegar('Mi perfil', {
-      nombre: formulario.nombre,
-      apellido: formulario.apellido,
-      email: formulario.email,
-      materias: formulario.materias,
-      presentacion: formulario.presentacion,
-      rol: 'estudiante'
-    })
+    nombre: formatearNombre(formulario.nombre),
+    apellido: formatearNombre(formulario.apellido),
+    email: formulario.email.trim().toLowerCase(),
+    materias: formulario.materias,
+    presentacion: formulario.presentacion.trim(),
+    rol: 'estudiante'
+})
   }
 
   return (

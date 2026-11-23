@@ -1,9 +1,16 @@
 import { useEffect, useState } from 'react'
 import { obtenerMaterias } from '../services/materias'
 
-function MiPerfil({ perfilInicial }) {
+function MiPerfil({ perfilInicial, actualizarPerfil }) {
   const [editando, setEditando] = useState(false)
   const [mensaje, setMensaje] = useState('')
+
+  const formatearNombre = (texto) => {
+    return texto
+        .trim()
+        .toLowerCase()
+        .replace(/\b\p{L}/gu, (letra) => letra.toUpperCase())
+}
 
   const [perfil, setPerfil] = useState(() => ({
     nombre: perfilInicial?.nombre || '',
@@ -12,6 +19,7 @@ function MiPerfil({ perfilInicial }) {
     materias: perfilInicial?.materias || '',
     modalidad: perfilInicial?.modalidad || '',
       rol: perfilInicial?.rol || 'estudiante',
+      formacion: perfilInicial?.formacion || {},
     presentacion: perfilInicial?.presentacion || ''
   }))
   const [materiasDisponibles, setMateriasDisponibles] = useState([])
@@ -32,24 +40,7 @@ function MiPerfil({ perfilInicial }) {
 }, [])
 
 
-
   const [formulario, setFormulario] = useState(perfil)
-
-  useEffect(() => {
-    const nuevoPerfil = {
-      nombre: perfilInicial?.nombre || '',
-      apellido: perfilInicial?.apellido || '',
-      email: perfilInicial?.email || '',
-      materias: perfilInicial?.materias || '',
-      modalidad: perfilInicial?.modalidad || '',
-      rol: perfilInicial?.rol || 'estudiante',
-      presentacion: perfilInicial?.presentacion || '',
-      
-    }
-
-    setPerfil(nuevoPerfil)
-    setFormulario(nuevoPerfil)
-  }, [perfilInicial])
 
   const manejarCambio = (e) => {
     const { name, value } = e.target
@@ -63,12 +54,21 @@ function MiPerfil({ perfilInicial }) {
   const guardarCambios = (e) => {
     e.preventDefault()
 
-    setPerfil({ ...formulario })
+    const nuevosDatos = {
+        ...formulario,
+        nombre: formatearNombre(formulario.nombre),
+        apellido: formatearNombre(formulario.apellido)
+    }
+
+    setPerfil(nuevosDatos)
+    setFormulario(nuevosDatos)
+    actualizarPerfil(nuevosDatos)
+
     setEditando(false)
     setMensaje('¡Tu perfil se actualizó correctamente!')
 
     setTimeout(() => setMensaje(''), 3000)
-  }
+}
 
   const cancelarEdicion = () => {
     setFormulario({ ...perfil })
@@ -243,8 +243,40 @@ function MiPerfil({ perfilInicial }) {
                 .join(', ')}
         </p>
     )}
-</div>
+</div> 
+{perfil.rol === 'profesor' && (
+    <div className="registro-campo perfil-campo-completo">
+        <h3>Formación académica</h3>
 
+        {['universitario', 'terciario', 'cursos'].map((tipo) => {
+            const formacion = formulario.formacion?.[tipo]
+
+            if (!formacion?.seleccionado) return null
+
+            return (
+                <div key={tipo} className="perfil-formacion-item">
+                    <strong>
+                        {tipo === 'universitario'
+                            ? 'Formación universitaria'
+                            : tipo === 'terciario'
+                                ? 'Formación terciaria'
+                                : 'Cursos realizados'}
+                    </strong>
+
+                    <p>{formacion.titulo}</p>
+
+                    {formacion.carrera && (
+                        <p>Carrera: {formacion.carrera}</p>
+                    )}
+
+                    {formacion.institucion && (
+                        <p>Institución: {formacion.institucion}</p>
+                    )}
+                </div>
+            )
+        })}
+    </div>
+)}
               <div className="registro-campo perfil-campo-completo">
                 <label htmlFor="perfil-presentacion">
     {perfil.rol === 'profesor'

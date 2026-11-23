@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react'
 import { obtenerMaterias } from '../services/materias'
 import { obtenerInstituciones } from '../services/instituciones'
+import {
+    obtenerCarrerasPorInstitucion,
+    obtenerInstitucionesPorCarrera
+} from '../services/carrerasPorInstitucion'
+
 
 function RegistroProfesor({ onNavegar }) {
     const [formulario, setFormulario] = useState({
@@ -16,17 +21,20 @@ function RegistroProfesor({ onNavegar }) {
             universitario: {
                 seleccionado: false,
                 titulo: '',
-                institucion: ''
+                institucion: '',
+                carrera: ''
             },
             terciario: {
                 seleccionado: false,
                 titulo: '',
-                institucion: ''
+                institucion: '',
+                carrera: ''
             },
             cursos: {
                 seleccionado: false,
                 titulo: '',
-                institucion: ''
+                institucion: '',
+                carrera: ''
             }
         },
         tieneExperiencia: null,
@@ -35,6 +43,7 @@ function RegistroProfesor({ onNavegar }) {
 
     const [institucionesSugeridas, setInstitucionesSugeridas] = useState([])
     const [tipoInstitucionActiva, setTipoInstitucionActiva] = useState(null)
+    const [carrerasSugeridas, setCarrerasSugeridas] = useState([])
     const [materiasDisponibles, setMateriasDisponibles] = useState([])
     const [error, setError] = useState('')
     const [mensaje, setMensaje] = useState('')
@@ -73,6 +82,12 @@ function RegistroProfesor({ onNavegar }) {
             )
             .trim()
     }
+    const formatearNombre = (texto) => {
+    return texto
+        .trim()
+        .toLowerCase()
+        .replace(/\b\p{L}/gu, (letra) => letra.toUpperCase());
+};
 
 const validarFormacion = (texto) => {
     const valor = texto.trim();
@@ -105,21 +120,25 @@ const validarFormacion = (texto) => {
     }
 
     const manejarNormalizacionFormacion = (e, tipo, campo) => {
-        const valor = e.target.value
+    const valor = e.target.value
 
-        if (!valor.trim()) return
+    if (!valor.trim()) return
 
-        setFormulario(previo => ({
-            ...previo,
-            formacion: {
-                ...previo.formacion,
-                [tipo]: {
-                    ...previo.formacion[tipo],
-                    [campo]: normalizarTexto(valor)
-                }
+    const valorNormalizado = campo === 'institucion' || campo === 'titulo'
+        ? formatearNombre(valor)
+        : normalizarTexto(valor)
+
+    setFormulario(previo => ({
+        ...previo,
+        formacion: {
+            ...previo.formacion,
+            [tipo]: {
+                ...previo.formacion[tipo],
+                [campo]: valorNormalizado
             }
-        }))
-    }
+        }
+    }))
+}
 
     const manejarCambioInstitucion = (e, tipo) => {
         const valor = e.target.value
@@ -138,29 +157,109 @@ const validarFormacion = (texto) => {
         setInstitucionesSugeridas(obtenerInstituciones(valor))
     }
 
+    const manejarCambioCarrera = (e, tipo) => {
+    const valor = e.target.value
+
+    setFormulario(previo => ({
+        ...previo,
+        formacion: {
+            ...previo.formacion,
+            [tipo]: {
+                ...previo.formacion[tipo],
+                carrera: valor,
+                titulo: valor,
+                institucion: ''
+            }
+        }
+    }))
+    setInstitucionesSugeridas([])
+    setCarrerasSugeridas(obtenerInstitucionesPorCarrera(valor))
+    setTipoInstitucionActiva(tipo)
+}
+
+
+
     const manejarSeleccionInstitucion = (institucion, tipo) => {
-        setFormulario(previo => ({
+
+    const carreras = obtenerOpcionesCarrera(institucion.nombre)
+
+    setFormulario(previo => {
+
+        const carreraActual = previo.formacion[tipo].carrera
+
+        const normalizar = texto =>
+            texto.toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .trim()
+
+        const carreraEncontrada = carreras.find(
+            carrera => normalizar(carrera) === normalizar(carreraActual)
+        )
+
+        return {
             ...previo,
             formacion: {
                 ...previo.formacion,
                 [tipo]: {
                     ...previo.formacion[tipo],
-                    institucion: institucion.nombre
+                    institucion: institucion.nombre,
+                    carrera: carreraEncontrada || carreraActual,
+                    titulo: carreraEncontrada || previo.formacion[tipo].titulo
                 }
             }
-        }))
+        }
+    })
 
-        setInstitucionesSugeridas([])
-        setTipoInstitucionActiva(null)
+    setInstitucionesSugeridas([])
+    setCarrerasSugeridas([])
+    setTipoInstitucionActiva(null)
+}
 
-    }
+    const obtenerOpcionesCarrera = (nombreInstitucion) => {
+    const oferta = obtenerCarrerasPorInstitucion(nombreInstitucion)
+
+    if (!oferta) return []
+
+    return [
+        ...(oferta.grado || []),
+        ...(oferta.pregrado || []),
+        ...(oferta.profesorados || []),
+        ...(oferta.ciclos || []),
+        ...(oferta.posgrado || []),
+        ...(oferta.diplomaturas || [])
+    ]
+}   
 
     const manejarEnvio = (e) => {
         e.preventDefault()
         setError('')
         setMensaje('')
+        if (formulario.materias.length === 0) {
+            setError('Tenes que seleccionar al menos una materia para registrarte como profesor.')
+            return
+        }
 
         const presentacion = formulario.presentacion.trim()
+
+        const textoPresentacion = presentacion.toLowerCase()
+
+        const expresionesEstudiante = [ //validacion para que no se pueda registrar un estudiante como profesor
+            'estoy estudiando',
+            'estudio',
+            'estudiar',
+            'soy estudiante',
+            'busco aprender',
+            'quiero aprender',
+            'quiero estudiar',
+            'busco reforzar',
+            'preparar mis examenes',
+            'preparar mis exámenes'
+        ]
+        if (expresionesEstudiante.some(expresion => textoPresentacion.includes(expresion))) {
+            setError('La presentación debe describir tu perfil como profesor, tu experiencia o tu metodología de enseñanza.')
+            return
+        }
 
         if (presentacion.length < 30) {
             setError('La presentación profesional debe tener al menos 30 caracteres.')
@@ -197,11 +296,40 @@ const validarFormacion = (texto) => {
             }
         }
 
+        if (formulario.tieneExperiencia === true) {
+        const detalle = formulario.detalleExperiencia.trim()
+        const palabras = detalle.split(/\s+/).filter(palabra => palabra.length > 1)
+
+        if (detalle.length < 15) {
+        setError('Contanos tu experiencia laboral con al menos 15 caracteres.')
+        return
+        }
+
+        if (palabras.length < 3) {
+        setError('Describí tu experiencia utilizando al menos 3 palabras.')
+        return
+        }
+
+        if (!/[a-záéíóúüñ]{2,}/i.test(detalle)) {
+        setError('La experiencia laboral debe contener texto válido.')
+        return
+        }
+
+        if (/(.)\1{4,}/i.test(detalle.replace(/\s/g, ''))) {
+        setError('La descripción contiene demasiados caracteres repetidos.')
+        return
+        }
+
+        if (/asdf|qwerty|123456|abcdef|prueba|^a+$/i.test(detalle.replace(/\s/g, ''))) {
+        setError('Ingresá una descripción válida de tu experiencia laboral.')
+        return
+        }
+}
         localStorage.setItem('usuarioRol', 'profesor')
 
         onNavegar('Mi perfil', {
-            nombre: formulario.nombre,
-            apellido: formulario.apellido,
+            nombre: formatearNombre(formulario.nombre),
+            apellido: formatearNombre(formulario.apellido),
             email: formulario.email,
             materias: formulario.materias,
             modalidad: formulario.modalidad,
@@ -365,63 +493,115 @@ const validarFormacion = (texto) => {
                                     {tipo.nombre}
                                 </label>
 
-                                {formulario.formacion[tipo.id].seleccionado && (
-                                    <div className="registro-subcampo">
+                                
+{formulario.formacion[tipo.id].seleccionado && (
+    <div className="registro-subcampo">
 
-                                        <input
-                                            type="text"
-                                            placeholder="Nombre del título, carrera o curso"
-                                            onBlur={(e) => manejarNormalizacionFormacion(e, tipo.id, 'titulo')}
-                                            value={formulario.formacion[tipo.id].titulo}
-                                            onChange={(e) => {
-                                                setFormulario(previo => ({
-                                                    ...previo,
-                                                    formacion: {
-                                                        ...previo.formacion,
-                                                        [tipo.id]: {
-                                                            ...previo.formacion[tipo.id],
-                                                            titulo: e.target.value
-                                                        }
-                                                    }
-                                                }))
-                                            }}
-                                            required
-                                        />
+        {obtenerOpcionesCarrera(
+            formulario.formacion[tipo.id].institucion
+        ).length > 0 ? (
+            <select
+                value={formulario.formacion[tipo.id].carrera}
+                onChange={(e) => {
+                    setFormulario(previo => ({
+                        ...previo,
+                        formacion: {
+                            ...previo.formacion,
+                            [tipo.id]: {
+                                ...previo.formacion[tipo.id],
+                                carrera: e.target.value,
+                                titulo: e.target.value
+                            }
+                        }
+                    }))
+                }}
+                required
+            >
+                <option value="">Seleccioná tu carrera</option>
 
-                                        <div className="institucion-autocomplete">
-                                            <input
-                                                type="text"
-                                                placeholder="Universidad o institución"
-                                                onBlur={(e) => manejarNormalizacionFormacion(e, tipo.id, 'institucion')}
-                                                value={formulario.formacion[tipo.id].institucion}
-                                                onChange={(e) => manejarCambioInstitucion(e, tipo.id)}
-                                                required
-                                            />
+                {obtenerOpcionesCarrera(
+                    formulario.formacion[tipo.id].institucion
+                ).map((carrera, indice) => (
+                    <option key={indice} value={carrera}>
+                        {carrera}
+                    </option>
+                ))}
+            </select>
+        ) : (
+            <input
+    type="text"
+    placeholder="Nombre del título, carrera o curso"
+    onBlur={(e) =>
+        manejarNormalizacionFormacion(e, tipo.id, 'titulo')
+    }
+    value={formulario.formacion[tipo.id].titulo}
+    onChange={(e) => manejarCambioCarrera(e, tipo.id)}
+    required
+/>)}
 
-                                            {tipoInstitucionActiva === tipo.id && institucionesSugeridas.length > 0 && (
-                                                <div className="institucion-sugerencias">
-                                                    {institucionesSugeridas.map((institucion, indice) => (
-                                                        <button
-                                                            key={indice}
-                                                            type="button"
-                                                            onMouseDown={(e) => {
-                                                                e.preventDefault()
-                                                                manejarSeleccionInstitucion(institucion, tipo.id)
-                                                            }}
-                                                        >
-                                                            {institucion.nombre}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
+        <div className="institucion-autocomplete">
+            <input
+                type="text"
+                placeholder="Universidad o institución"
+                onBlur={(e) =>
+                    manejarNormalizacionFormacion(e, tipo.id, 'institucion')
+                }
+                value={formulario.formacion[tipo.id].institucion}
+                onChange={(e) => manejarCambioInstitucion(e, tipo.id)}
+                required
+            />
 
-                                    </div>
-                                )}
-                            </div>
+            {tipoInstitucionActiva === tipo.id &&
+                institucionesSugeridas.length > 0 && (
+                    <div className="institucion-sugerencias">
+                        {institucionesSugeridas.map((institucion, indice) => (
+                            <button
+                                key={indice}
+                                type="button"
+                                onMouseDown={(e) => {
+                                    e.preventDefault()
+                                    manejarSeleccionInstitucion(
+                                        institucion,
+                                        tipo.id
+                                    )
+                                    setCarrerasSugeridas([])
+                                }}
+                            >
+                                {institucion.nombre}
+                            </button>
                         ))}
-                    </div>
+                                        </div>
+                                        
+                                    )}
+                                    {tipoInstitucionActiva === tipo.id &&
+    carrerasSugeridas.length > 0 && (
+        <div className="institucion-sugerencias">
+            {carrerasSugeridas.map((institucion, indice) => (
+                <button
+                    key={indice}
+                    type="button"
+                    onMouseDown={(e) => {
+                        e.preventDefault()
 
+                        manejarSeleccionInstitucion(
+                            institucion,
+                            tipo.id
+                        )
+
+                        setCarrerasSugeridas([])
+                    }}
+                >
+                    {institucion.nombre}
+                </button>
+            ))}
+        </div>
+    )}
+                                </div>
+                        </div>
+                    )}
+                </div>
+            ))}
+        </div>
                     <div className="registro-campo registro-campo-completo">
                         <h3>Experiencia laboral</h3>
                         <p>¿Tenés experiencia dando clases?</p>

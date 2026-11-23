@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { obtenerMaterias } from "../services/materias";
 
-function PerfilProfesor({ perfilInicial }) {
+function PerfilProfesor({ perfilInicial, actualizarPerfil }) {
   const [editando, setEditando] = useState(false);
   const [mensaje, setMensaje] = useState("");
   const [materiasDisponibles, setMateriasDisponibles] = useState([]);
@@ -62,14 +62,6 @@ function PerfilProfesor({ perfilInicial }) {
 
   const [perfil, setPerfil] = useState(obtenerPerfil);
   const [formulario, setFormulario] = useState(obtenerPerfil);
-
-  useEffect(() => {
-    const nuevoPerfil = obtenerPerfil();
-    setPerfil(nuevoPerfil);
-    setFormulario(nuevoPerfil);
-    setEditando(false);
-    setMensaje("");
-  }, [perfilInicial]);
 
   const manejarCambio = (e) => {
     const { name, value } = e.target;
@@ -154,12 +146,19 @@ function PerfilProfesor({ perfilInicial }) {
       }
     }
 
-    setPerfil({ ...formulario });
-    setEditando(false);
-    setMensaje("¡Tu perfil docente se actualizó correctamente!");
+    const nuevosDatos = {
+  ...perfilInicial,
+  ...formulario,
+};
 
-    setTimeout(() => setMensaje(""), 3000);
+setPerfil(nuevosDatos);
+actualizarPerfil(nuevosDatos);
+setEditando(false);
+setMensaje("¡Tu perfil docente se actualizó correctamente!");
+
+setTimeout(() => setMensaje(""), 3000);
   };
+
   const cancelarEdicion = () => {
     setFormulario({ ...perfil });
     setEditando(false);
