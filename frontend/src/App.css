@@ -1,0 +1,216 @@
+/* Contenedor general de la aplicación */
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.app {
+  min-height: 100vh;
+}
+
+/* Barra de navegación */
+.navbar {
+  position: relative;
+  z-index: 10;
+}
+
+/* Botón para abrir y cerrar el menú */
+.navbar-menu-button {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 12;
+
+  padding: 10px 16px;
+  color: var(--color-background);
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-button);
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(26, 51, 0, 0.12);
+}
+
+.navbar-menu-button:hover {
+  opacity: 0.85;
+}
+
+/* Foco visible para navegación con teclado */
+.navbar-menu-button:focus-visible,
+.navbar-link:focus-visible {
+  outline: 2px solid var(--color-terracotta);
+  outline-offset: 4px;
+}
+
+/* Panel lateral desplegable */
+.navbar-dropdown {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 11;
+
+  width: 240px;
+  padding: 100px 24px 32px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+
+  background: var(--color-background);
+  border-right: 1px solid var(--color-border);
+  box-shadow: 8px 0 24px rgba(26, 51, 0, 0.08);
+}
+
+.navbar-link {
+  display: block;
+  padding: 14px 16px;
+  color: var(--color-text);
+  border-radius: var(--radius-button);
+  font-size: 16px;
+  font-weight: 500;
+  transition: background 0.2s ease;
+}
+
+.navbar-link:hover {
+  background: var(--color-mint);
+}
+
+/* contenido principal: se desplaza al abrir el menu */
+.contenido-principal {
+  min-height: 100vh;
+  margin-left: 16px;
+  transition: margin-left 0.3s ease;
+}
+
+.app.menu-abierto .contenido-principal {
+  margin-left: 240px;
+}
+
+/* Contenido general de las páginas */
+.page-container {
+  width: calc(100% - 48px);
+  max-width: 1200px;
+  margin: 64px auto;
+}
+
+.page-title {
+  max-width: 850px;
+  margin-bottom: 24px;
+  font-size: clamp(36px, 6vw, 64px);
+  line-height: 1.08;
+  letter-spacing: -1px;
+}
+
+.highlight {
+  background: var(--color-highlight);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* adaptacion general a pantallas pequeñas */
+@media (max-width: 700px) {
+  .navbar-menu-button {
+    top: 16px;
+    left: 16px;
+  }
+
+  .navbar-dropdown {
+    width: min(280px, 85vw);
+  }
+
+  .app.menu-abierto .contenido-principal {
+    margin-left: min(280px, 85vw);
+  }
+
+  .page-container {
+    width: calc(100% - 32px);
+    margin: 88px auto 40px;
+  }
+}
+
+/* botones de bienvenida y login */
+.botones-bienvenida {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.btn-primario {
+  background: var(--color-primary);
+  color: var(--color-background);
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--radius-button);
+  font-weight: 600;
+  font-size: 16px;
+  transition: opacity 0.2s;
+}
+
+.btn-primario:hover {
+  opacity: 0.85;
+}
+
+.btn-secundario {
+  background: var(--color-mint);
+  color: var(--color-primary);
+  padding: 12px 24px;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-button);
+  font-weight: 600;
+  font-size: 16px;
+  transition: background 0.2s;
+}
+
+.btn-secundario:hover {
+  background: var(--color-teal);
+}
+
+/* formularios */
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 400px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.input-group label {
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.input-group input {
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-button);
+  font-size: 16px;
+  background: var(--color-background);
+}
+
+/* centrado para pantallas de inicio y login */
+.pantalla-centrada {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 80vh;
+}
+
+.pantalla-centrada .botones-bienvenida {
+  justify-content: center;
+}
+
+.pantalla-centrada .page-title {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
+

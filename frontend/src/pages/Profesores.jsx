@@ -1,0 +1,480 @@
+import { useState, useEffect, useCallback } from 'react'
+import jsPDF from 'jspdf' 
+import autoTable from 'jspdf-autotable'
+
+import {
+    obtenerProfesores as obtenerProfesoresServicio,
+    crearProfesor,
+    actualizarProfesor,
+    eliminarProfesor as eliminarProfesorServicio
+} from '../services/profesores'
+
+import { obtenerMaterias as obtenerMateriasServicio } from '../services/materias'
+
+    function Profesores() {
+    // estados para los datos y la tabla
+    const [profesores, setProfesores] = useState([])
+    const [totalRegistros, setTotalRegistros] = useState(0)
+    const [cargando, setCargando] = useState(true)
+    const [materiasDisponibles, setMateriasDisponibles] = useState([])
+
+    // estados para paginacion, busqueda y filtros
+    const [busqueda, setBusqueda] = useState('')
+    const [paginaActual, setPaginaActual] = useState(1)
+    const [limite, setLimite] = useState(10)
+    const [modalidadFiltro, setModalidadFiltro] = useState('') 
+    const [ordenarPor, setOrdenarPor] = useState('id_profesor')
+    const [direccionOrden, setDireccionOrden] = useState('ASC')
+
+    // estados para el formulario (crear/editar)
+    const [mostrarFormulario, setMostrarFormulario] = useState(false)
+    const [profesorEditando, setProfesorEditando] = useState(null)
+    const [errorFormulario, setErrorFormulario] = useState('')
+
+    const [formData, setFormData] = useState({
+    nombre: '',
+    apellido: '',
+    email: '',
+    password: '',
+    descripcion: '',
+    precio_hora: '',
+    modalidad: 'Virtual',
+    ubicacion: '',
+    materias: []
+    })
+
+    // Obtener la lista de profesores desde el servicio mock (datos en memoria). En un futuro integra conexion con el backend
+    const obtenerProfesores = useCallback(async () => {
+    setCargando(true)
+
+    try {
+        const respuesta = await obtenerProfesoresServicio({
+            pagina: paginaActual,
+            limite,
+            buscar: busqueda,
+            modalidad: modalidadFiltro,
+            orden: ordenarPor,
+            direccion: direccionOrden
+        })
+
+        setProfesores(respuesta.datos || [])
+        setTotalRegistros(respuesta.totalRegistros || 0)
+    } catch (error) {
+        console.error('Error al obtener profesores:', error)
+        setProfesores([])
+        setTotalRegistros(0)
+    } finally {
+        setCargando(false)
+    }
+}, [paginaActual, limite, busqueda, modalidadFiltro, ordenarPor, direccionOrden])
+
+    const obtenerMateriasDisponibles = useCallback(async () => {
+    try {
+        const respuesta = await obtenerMateriasServicio({
+            pagina: 1,
+            limite: 100
+        })
+
+        setMateriasDisponibles(respuesta.datos || [])
+    } catch (error) {
+        console.error('Error al obtener materias:', error)
+        setMateriasDisponibles([])
+    }
+}, [])
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            obtenerMateriasDisponibles()
+        }, 0)
+        return () => clearTimeout(timer)
+    }, [obtenerMateriasDisponibles])
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            obtenerProfesores()
+        }, 300)
+        return () => clearTimeout(timer)
+    }, [obtenerProfesores])
+
+    
+// Generar PDF
+const exportarPDF = async () => {
+    try {
+        // Obtener todos los profesores desde el servicio mock,
+        // aplicando los filtros y el ordenamiento actuales.
+        const respuesta = await obtenerProfesoresServicio({
+            pagina: 1,
+            limite: 1000,
+            buscar: busqueda,
+            modalidad: modalidadFiltro,
+            orden: ordenarPor,
+            direccion: direccionOrden
+        })
+
+        const listaCompleta = respuesta.datos || []
+
+        const doc = new jsPDF()
+
+        doc.setFontSize(18)
+        doc.setTextColor(36, 69, 0)
+        doc.text('Profy - Reporte de Profesores', 14, 22)
+
+        doc.setFontSize(10)
+        doc.setTextColor(100)
+        const fecha = new Date().toLocaleDateString('es-AR')
+        doc.text(`Generado el: ${fecha}`, 14, 30)
+
+        // Validar si existen profesores para exportar
+        if (!listaCompleta || listaCompleta.length === 0) {
+            doc.text('No hay profesores registrados para exportar.', 14, 45)
+            doc.save('Profy_Listado_Profesores.pdf')
+            return
+        }
+
+        const columnas = [
+            "ID",
+            "Nombre Completo",
+            "Email",
+            "Modalidad",
+            "Tarifa/Hora"
+        ]
+
+        const filas = listaCompleta.map(prof => [
+            prof.id_profesor || '-',
+            `${prof.nombre || ''} ${prof.apellido || ''}`.trim() || 'Sin Nombre',
+            prof.email || '-',
+            prof.modalidad || 'Virtual',
+            `$${prof.precio_hora || 0}`
+        ])
+
+        autoTable(doc, {
+            startY: 38,
+            head: [columnas],
+            body: filas,
+            theme: 'grid',
+            headStyles: { fillColor: [36, 69, 0] },
+            alternateRowStyles: { fillColor: [245, 245, 245] },
+            styles: { fontSize: 10, cellPadding: 4 }
+        })
+
+        doc.save(`Profy_Profesores_${fecha.replace(/\//g, '-')}.pdf`)
+
+    } catch (error) {
+        console.error('Error al generar PDF:', error)
+        alert('Hubo un problema al generar el archivo PDF.')
+    }
+}
+
+    
+    // manejo del formulario (abrir y cargar datos)
+    const abrirFormularioCrear = () => {
+        setProfesorEditando(null)
+        setFormData({ nombre: '', apellido: '', email: '', password: '', descripcion: '', precio_hora: '', modalidad: 'Virtual', ubicacion: '', materias: [] })
+        setErrorFormulario('')
+        setMostrarFormulario(true)
+    }
+
+    const abrirFormularioEditar = (profesor) => {
+        setProfesorEditando(profesor)
+        const materiasPreseleccionadas = profesor.materias || []
+
+        setFormData({
+            nombre: profesor.nombre || '',
+            apellido: profesor.apellido || '',
+            email: profesor.email || '',
+            password: '', 
+            descripcion: profesor.descripcion || '',
+            precio_hora: profesor.precio_hora || '',
+            modalidad: profesor.modalidad || 'Virtual',
+            ubicacion: profesor.ubicacion || '',
+            materias: materiasPreseleccionadas
+        })
+        setErrorFormulario('')
+        setMostrarFormulario(true)
+    }
+
+    // enviar datos al backend (POST / PUT)
+    const guardarProfesor = async (e) => {
+    e.preventDefault()
+    setErrorFormulario('')
+
+    try {
+        if (profesorEditando) {
+            await actualizarProfesor(profesorEditando.id_profesor, formData)
+        } else {
+            await crearProfesor(formData)
+        }
+
+        setMostrarFormulario(false)
+        await obtenerProfesores()
+    } catch (err) {
+        setErrorFormulario(err.message)
+    }
+}
+
+    // Eliminar profesor
+const eliminarProfesor = async (id) => {
+    if (!window.confirm('¿Estás segura de que querés eliminar este profesor?')) return
+
+    try {
+        await eliminarProfesorServicio(id)
+        await obtenerProfesores()
+    } catch (err) {
+        alert(err.message)
+    }
+}
+
+    return (
+        <div className="page-container">
+        <h2 className="page-title">Gestión de <span className="highlight">Profesores</span></h2>
+        <p style={{ marginBottom: '24px', color: 'var(--color-text)' }}>Administración y control total de los docentes del sistema.</p>
+
+        {/* herramientas y filtros */}
+        <div style={{ background: 'var(--color-background)', padding: '20px', borderRadius: 'var(--radius-card)', border: '1px solid var(--color-border)', marginBottom: '24px' }}>
+            
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
+            {/* Búsqueda por texto */}
+            <div style={{ flex: '1', minWidth: '200px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px' }}>Buscar profesor</label>
+                <input 
+                type="text" 
+                placeholder="Ej: Juan Pérez..." 
+                value={busqueda}
+                onChange={(e) => { setBusqueda(e.target.value); setPaginaActual(1); }}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid var(--color-border)' }}
+                />
+            </div>
+
+            {/* filtro por modalidad */}
+            <div style={{ flex: '1', minWidth: '150px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px' }}>Modalidad</label>
+                <select 
+                value={modalidadFiltro} 
+                onChange={(e) => { setModalidadFiltro(e.target.value); setPaginaActual(1); }}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid var(--color-border)' }}
+                >
+                <option value="">Todas</option>
+                <option value="Virtual">Virtual</option>
+                <option value="Presencial">Presencial</option>
+                <option value="Mixta">Mixta</option>
+                </select>
+            </div>
+
+            {/* ordenamiento */}
+            <div style={{ flex: '1', minWidth: '150px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px' }}>Ordenar por</label>
+                <select 
+                value={ordenarPor} 
+                onChange={(e) => setOrdenarPor(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid var(--color-border)' }}
+                >
+                <option value="id_profesor">ID de Profesor</option>
+                <option value="nombre">Nombre</option>
+                <option value="precio_hora">Precio por Hora</option>
+                </select>
+            </div>
+
+            <div style={{ flex: '1', minWidth: '150px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '6px' }}>Dirección</label>
+                <select 
+                value={direccionOrden} 
+                onChange={(e) => setDireccionOrden(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid var(--color-border)' }}
+                >
+                <option value="ASC">Ascendente</option>
+                <option value="DESC">Descendente</option>
+                </select>
+            </div>
+            </div>
+
+            {/* paginacion y botones */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderTop: '1px solid var(--color-border)', paddingTop: '16px', flexWrap: 'wrap', gap: '16px' }}>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <label style={{ fontSize: '14px', fontWeight: 'bold' }}>Mostrar:</label>
+                <select 
+                value={limite} 
+                onChange={(e) => { setLimite(Number(e.target.value)); setPaginaActual(1); }}
+                style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid var(--color-border)' }}
+                >
+                <option value={5}>5 registros</option>
+                <option value={10}>10 registros</option>
+                <option value={20}>20 registros</option>
+                </select>
+                <span style={{ fontSize: '14px', color: 'var(--color-secondary)' }}>
+                (Total: {totalRegistros} encontrados)
+                </span>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+                <button onClick={exportarPDF} style={{ padding: '10px 16px', borderRadius: 'var(--radius-button)', border: '1px solid var(--color-border)', background: 'white', cursor: 'pointer', fontWeight: 'bold' }}>
+                Descargar PDF
+                </button>
+                <button onClick={abrirFormularioCrear} className="btn-primario">
+                + Nuevo Registro
+                </button>
+            </div>
+            </div>
+        </div>
+
+        {/* tabla de registros */}
+        <div style={{ overflowX: 'auto', background: 'var(--color-background)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-card)', padding: '16px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '700px' }}>
+            <thead>
+                <tr style={{ borderBottom: '2px solid var(--color-border)' }}>
+                <th style={{ padding: '12px', color: 'var(--color-secondary)' }}>ID</th>
+                <th style={{ padding: '12px', color: 'var(--color-secondary)' }}>Nombre Completo</th>
+                <th style={{ padding: '12px', color: 'var(--color-secondary)' }}>Email</th>
+                <th style={{ padding: '12px', color: 'var(--color-secondary)' }}>Modalidad</th>
+                <th style={{ padding: '12px', color: 'var(--color-secondary)' }}>Tarifa/Hora</th>
+                <th style={{ padding: '12px', color: 'var(--color-secondary)' }}>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {cargando ? (
+                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '32px' }}>Cargando profesores...</td></tr>
+                ) : profesores.length > 0 ? (
+                profesores.map((prof) => (
+                    <tr key={prof.id_profesor} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                    <td style={{ padding: '12px' }}>#{prof.id_profesor}</td>
+                    <td style={{ padding: '12px', fontWeight: 'bold' }}>{prof.nombre} {prof.apellido}</td>
+                    <td style={{ padding: '12px' }}>{prof.email}</td>
+                    <td style={{ padding: '12px' }}>{prof.modalidad}</td>
+                    <td style={{ padding: '12px' }}>${prof.precio_hora}</td>
+                    <td style={{ padding: '12px' }}>
+                        <button onClick={() => abrirFormularioEditar(prof)} style={{ marginRight: '12px', cursor: 'pointer', background: 'none', border: 'none', color: 'var(--color-primary)', fontWeight: 'bold', textDecoration: 'underline' }}>Editar</button>
+                        <button onClick={() => eliminarProfesor(prof.id_profesor)} style={{ cursor: 'pointer', background: 'none', border: 'none', color: 'var(--color-terracotta)', fontWeight: 'bold', textDecoration: 'underline' }}>Eliminar</button>
+                    </td>
+                    </tr>
+                ))
+                ) : (
+                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '32px' }}>No hay registros que coincidan con la búsqueda.</td></tr>
+                )}
+            </tbody>
+            </table>
+        </div>
+
+        {/* controles de pagina */}
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '24px', gap: '16px' }}>
+            <button 
+            disabled={paginaActual === 1}
+            onClick={() => setPaginaActual(paginaActual - 1)}
+            style={{ padding: '8px 16px', borderRadius: 'var(--radius-button)', border: '1px solid var(--color-border)', cursor: paginaActual === 1 ? 'not-allowed' : 'pointer', background: 'white' }}
+            >
+            Página Anterior
+            </button>
+            <span style={{ fontWeight: 'bold' }}>
+            Página {paginaActual} de {Math.max(1, Math.ceil(totalRegistros / limite))}
+            </span>
+            <button 
+            disabled={paginaActual >= Math.ceil(totalRegistros / limite)}
+            onClick={() => setPaginaActual(paginaActual + 1)}
+            style={{ padding: '8px 16px', borderRadius: 'var(--radius-button)', border: '1px solid var(--color-border)', cursor: paginaActual >= Math.ceil(totalRegistros / limite) ? 'not-allowed' : 'pointer', background: 'white' }}
+            >
+            Página Siguiente
+            </button>
+        </div>
+
+        {/* ventana de edicion*/}
+        {mostrarFormulario && (
+            <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, overflowY: 'auto', padding: '20px' }}>
+            <div style={{ background: 'white', padding: '32px', borderRadius: 'var(--radius-card)', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
+                
+                <h3 style={{ marginTop: 0, borderBottom: '2px solid var(--color-border)', paddingBottom: '12px', marginBottom: '20px' }}>
+                {profesorEditando ? 'Visualización y Edición del Registro' : 'Alta de Nuevo Profesor'}
+                </h3>
+                
+                {errorFormulario && (
+                <div style={{ color: 'var(--color-terracotta)', background: '#ffe9e9', padding: '12px', borderRadius: '6px', fontSize: '14px', marginBottom: '20px', border: '1px solid var(--color-terracotta)' }}>
+                    {errorFormulario}
+                </div>
+                )}
+
+                <form onSubmit={guardarProfesor} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                
+                <div style={{ gridColumn: '1 / 2' }}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>Nombre</label>
+                    <input type="text" value={formData.nombre} onChange={(e) => setFormData({...formData, nombre: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }} />
+                </div>
+
+                <div style={{ gridColumn: '2 / 3' }}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>Apellido</label>
+                    <input type="text" value={formData.apellido} onChange={(e) => setFormData({...formData, apellido: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }} />
+                </div>
+
+                <div style={{ gridColumn: '1 / 3' }}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>Correo Electrónico</label>
+                    <input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }} />
+                </div>
+
+                <div style={{ gridColumn: '1 / 3' }}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>
+                    Contraseña de Acceso {profesorEditando && <span style={{color: 'gray', fontWeight: 'normal'}}>(Dejar en blanco para conservar la actual)</span>}
+                    </label>
+                    <input type="password" placeholder="********" value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} {...(!profesorEditando && { required: true })} style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }} />
+                </div>
+
+                <div style={{ gridColumn: '1 / 3' }}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>Descripción / Perfil Profesional</label>
+                    <textarea rows="3" value={formData.descripcion} onChange={(e) => setFormData({...formData, descripcion: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box', resize: 'vertical' }} />
+                </div>
+
+                <div style={{ gridColumn: '1 / 2' }}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>Modalidad de Clases</label>
+                    <select value={formData.modalidad} onChange={(e) => setFormData({...formData, modalidad: e.target.value})} style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}>
+                    <option value="Virtual">Virtual</option>
+                    <option value="Presencial">Presencial</option>
+                    <option value="Mixta">Mixta</option>
+                    </select>
+                </div>
+
+                <div style={{ gridColumn: '2 / 3' }}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>Tarifa por Hora ($)</label>
+                    <input type="number" step="100" min="0" value={formData.precio_hora} onChange={(e) => setFormData({...formData, precio_hora: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }} />
+                </div>
+
+                <div style={{ gridColumn: '1 / 3' }}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>Ubicación Física / Zona</label>
+                    <input type="text" placeholder="Ej: Centro, Bahía Blanca" value={formData.ubicacion} onChange={(e) => setFormData({...formData, ubicacion: e.target.value})} style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }} />
+                </div>
+
+                <div style={{ gridColumn: '1 / 3', background: '#f8f9fa', padding: '16px', borderRadius: '4px', border: '1px solid var(--color-border)' }}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '12px' }}>Materias que dicta</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }}>
+                        {materiasDisponibles.map(materia => (
+                            <label key={materia.id_materia} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer' }}>
+                                <input 
+                                    type="checkbox"
+                                    checked={formData.materias.includes(materia.id_materia)}
+                                    onChange={(e) => {
+                                        const seleccionadas = e.target.checked 
+                                            ? [...formData.materias, materia.id_materia]
+                                            : formData.materias.filter(id => id !== materia.id_materia);
+                                        setFormData({ ...formData, materias: seleccionadas });
+                                    }}
+                                    style={{ cursor: 'pointer' }}
+                                />
+                                {materia.nombre}
+                            </label>
+                        ))}
+                    </div>
+                </div>
+                
+                {/* Botones del formulario */}
+                <div style={{ gridColumn: '1 / 3', display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '20px', borderTop: '1px solid var(--color-border)', paddingTop: '16px' }}>
+                    <button type="button" onClick={() => setMostrarFormulario(false)} style={{ padding: '10px 20px', borderRadius: 'var(--radius-button)', border: '1px solid var(--color-border)', cursor: 'pointer', background: '#f5f5f5', fontWeight: 'bold' }}>
+                    Descartar Cambios
+                    </button>
+                    <button type="submit" className="btn-primario" style={{ padding: '10px 24px' }}>
+                    {profesorEditando ? 'Actualizar Registro' : 'Confirmar Alta'}
+                    </button>
+                </div>
+                </form>
+            </div>
+            </div>
+        )}
+
+        </div>
+    )
+    }
+    export default Profesores

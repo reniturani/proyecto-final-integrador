@@ -1,0 +1,329 @@
+/* Pantalla Materias */
+
+.materias-header {
+    margin-bottom: 32px;
+}
+
+.materias-header > p {
+    margin-top: 8px;
+    color: #555555;
+    line-height: 1.6;
+}
+
+.materias-filtros {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 32px;
+    padding: 24px;
+    background: #ffffff;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+}
+
+.materias-busqueda,
+.materias-control {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.materias-busqueda label,
+.materias-control label {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.materias-busqueda input,
+.materias-control select {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    font: inherit;
+    color: var(--color-text);
+    background: #ffffff;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+}
+
+.materias-busqueda input:focus,
+.materias-control select:focus {
+    outline: 2px solid var(--color-primary, #8b5cf6);
+    outline-offset: 2px;
+}
+
+.materias-opciones {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.materias-resultados {
+    min-width: 0;
+}
+
+.materias-resumen {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.materias-resumen h2 {
+    font-size: 22px;
+    color: var(--color-text);
+}
+
+.materias-resumen p {
+    color: #555555;
+}
+
+.materias-lista {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+}
+
+.materia-tarjeta {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 22px;
+    background: #ffffff;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+}
+
+.materia-identificador {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    background: #f3e8ff;
+    color: #6b21a8;
+    border-radius: 12px;
+    font-weight: 700;
+}
+
+.materia-info {
+    min-width: 0;
+}
+
+.materia-info h3 {
+    margin-bottom: 8px;
+    font-size: 19px;
+    color: var(--color-text);
+    overflow-wrap: anywhere;
+}
+
+.materia-info p {
+    margin: 0;
+    color: #555555;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.materias-mensaje {
+    padding: 24px;
+    background: #ffffff;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    color: #555555;
+    line-height: 1.6;
+}
+
+.materias-error {
+    color: #b42318;
+}
+
+.materias-paginacion {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 28px;
+}
+
+.materias-paginacion > p {
+    color: #555555;
+}
+
+.materias-paginacion-botones {
+    display: flex;
+    gap: 10px;
+}
+
+.materias-boton {
+    padding: 10px 18px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: var(--color-primary, #8b5cf6);
+    color: #ffffff;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.materias-boton.secundario {
+    color: var(--color-text);
+    background: #ffffff;
+    border-color: var(--color-border);
+}
+
+.materias-boton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Detalle y selección de materias */
+
+.materia-tarjeta-boton {
+    width: 100%;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.materia-tarjeta-boton:hover {
+    border-color: var(--color-primary, #8b5cf6);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.materia-tarjeta-boton:focus-visible {
+    outline: 2px solid var(--color-primary, #8b5cf6);
+    outline-offset: 3px;
+}
+
+.materia-ver-detalle {
+    display: inline-block;
+    margin-top: 12px;
+    color: var(--color-primary, #8b5cf6);
+    font-weight: 600;
+}
+
+.materias-volver {
+    margin-bottom: 24px;
+}
+
+.materia-detalle {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 28px;
+    background: #ffffff;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+}
+
+.materia-detalle-cabecera {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.materia-detalle-cabecera h2 {
+    margin-bottom: 8px;
+    color: var(--color-text);
+    font-size: 24px;
+}
+
+.materia-detalle-cabecera p {
+    color: #555555;
+}
+
+.materia-detalle-campo h3 {
+    margin-bottom: 8px;
+    color: var(--color-text);
+    font-size: 16px;
+}
+
+.materia-detalle-campo p {
+    color: #555555;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+/* Adaptación a pantallas pequeñas */
+
+@media (max-width: 640px) {
+    .materias-filtros {
+        padding: 18px;
+    }
+
+    .materias-opciones {
+        grid-template-columns: 1fr;
+    }
+
+    .materias-resumen {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .materias-paginacion {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .materia-detalle {
+        padding: 20px;
+    }
+
+    .materia-detalle-cabecera {
+        align-items: flex-start;
+    }
+}
+
+
+/* Campos del detalle de materia al editar */
+.materia-detalle input,
+.materia-detalle textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    margin-top: 8px;
+    border: 1px solid #d1d9e6;
+    border-radius: 10px;
+    background-color: #ffffff;
+    color: #263449;
+    font: inherit;
+    font-size: 15px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Campo del nombre */
+.materia-detalle input {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+/* Campo de descripción */
+.materia-detalle textarea {
+    min-height: 110px;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+/* Resaltar el campo seleccionado */
+.materia-detalle input:focus,
+.materia-detalle textarea:focus {
+    outline: none;
+    border-color: #647fc0;
+    box-shadow: 0 0 0 3px rgba(100, 127, 192, 0.15);
+}
+
+/* Separación de la descripción */
+.materia-detalle-descripcion {
+    margin-top: 24px;
+}
+
+.materia-detalle-descripcion h3 {
+    margin-bottom: 10px;
+}
