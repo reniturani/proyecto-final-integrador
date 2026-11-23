@@ -35,6 +35,8 @@ sequelize.authenticate()
     .then(() => {
         console.log('Tablas creadas correctamente');
 
+        const PORT = process.env.PORT || 3000;
+        
         app.listen(3000, () => {
             console.log('Servidor corriendo en http://localhost:3000');
         });
