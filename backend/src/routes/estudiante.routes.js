@@ -10,7 +10,7 @@ const {
 } = require('../controllers/estudiantes.controller');
 
 // importamos el middleware de autenticacion
-const { verificarToken } = require('../middlewares/auth.middleware');
+const { verificarToken, verificarAdministrador } = require('../middlewares/auth.middleware');
 
 // GET: obtener todos los estudiantes (publico)
 router.get('/', obtenerEstudiantes);
@@ -22,9 +22,9 @@ router.get('/:id', obtenerEstudiantePorId);
 router.post('/', crearEstudiante);
 
 // PUT: actualizar un estudiante existente (protegido)
-router.put('/:id', verificarToken, actualizarEstudiante);
+router.put('/:id', verificarToken, verificarAdministrador, actualizarEstudiante);
 
 // DELETE: eliminar un estudiante (protegido)
-router.delete('/:id', verificarToken, eliminarEstudiante);
+router.delete('/:id', verificarToken, verificarAdministrador, eliminarEstudiante);
 
 module.exports = router;
