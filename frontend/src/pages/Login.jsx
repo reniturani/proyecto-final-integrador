@@ -1,5 +1,60 @@
     import { useState } from 'react'
 
+    const usuariosDemo = {
+    estudiante: {
+        email: 'estudiante.prueba@profy.com',
+        password: 'Estudiante123!',
+        perfil: {
+            id_estudiante: 13,
+            nombre: 'Estudiante',
+            apellido: 'Prueba',
+            email: 'estudiante.prueba@profy.com',
+            rol: 'estudiante',
+            materias: [1,9,10],
+            modalidad: 'Virtual',
+            formacion: '',
+            presentacion: 'Soy estudiante y busco reforzar los temas clave de mis materias con explicaciones claras, prácticas y a mi ritmo. Me gusta trabajar sobre ejercicios reales, entender el porqué de cada concepto y resolver dudas puntuales para llegar con seguridad a los parciales y finales.'
+        }
+    },
+    profesor: {
+    email: 'profesor.prueba@profy.com',
+    password: 'Profesor123!',
+    perfil: {
+        id_profesor: 13,
+        nombre: 'Profesor',
+        apellido: 'Prueba',
+        email: 'profesor.prueba@profy.com',
+        rol: 'profesor',
+        presentacion: 'Soy profesor y me enfoco en acompañar a los estudiantes a construir bases sólidas y resolver ejercicios prácticos a su ritmo. Explico los conceptos de forma clara, paso a paso y conectándolos con ejemplos reales para ganar seguridad en clase y en los exámenes. Adapto cada encuentro según las dudas, el nivel y los objetivos de cada persona.',
+        precio_hora: 10000,
+        modalidad: 'Mixta',
+        ubicacion: 'Bahía Blanca',
+        materias: [1, 9, 10],
+
+        formacion: {
+            universitario: {
+                seleccionado: true,
+                titulo: 'Formación en Sistemas y Bases de Datos',
+                institucion: 'Instituto Demo Profy (datos ficticios)'
+            },
+            terciario: {
+                seleccionado: false,
+                titulo: '',
+                institucion: ''
+            },
+            cursos: {
+                seleccionado: false,
+                titulo: '',
+                institucion: ''
+            }
+        },
+
+        tieneExperiencia: true,
+        detalleExperiencia: 'Experiencia de demostración: clases particulares de Bases de Datos, consultas SQL y modelado de datos. Acompañamiento a estudiantes mediante ejercicios prácticos.'
+    }
+}
+}
+
     function Login({ onNavegar }) {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
@@ -12,7 +67,31 @@
         setError('')
         setCargando(true)
 
-        try {
+        try { // Inicio de sesión local para estudiantes y profesores
+    if (tipo !== 'administrador') {
+    const usuario = usuariosDemo[tipo]
+
+    if (
+        email.trim().toLowerCase() !== usuario.email ||
+        password !== usuario.password
+    ) {
+        throw new Error('Email o contraseña incorrectos.')
+    }
+
+    localStorage.removeItem('token')
+    localStorage.setItem('usuarioRol', tipo)
+    localStorage.setItem(
+        'usuarioId',
+        String(
+            tipo === 'estudiante'
+                ? usuario.perfil.id_estudiante
+                : usuario.perfil.id_profesor
+        )
+    )
+
+    onNavegar('Mi perfil', usuario.perfil)
+    return
+}
         const respuesta = await fetch('http://localhost:3000/api/auth/login', {
             method: 'POST',
             headers: {
