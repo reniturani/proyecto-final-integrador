@@ -58,6 +58,7 @@
     function Login({ onNavegar }) {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [mostrarPassword, setMostrarPassword] = useState(false) // Estado para controlar la visibilidad de la contraseña
     const [tipo, setTipo] = useState('administrador')
     const [error, setError] = useState('')
     const [cargando, setCargando] = useState(false)
@@ -159,16 +160,52 @@
             />
             </div>
 
-            <div className="input-group">
-            <label>Contraseña</label>
-            <input 
-                type="password" 
-                placeholder="••••••••" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required 
-            />
-            </div>
+            <div className="password-input-wrapper">
+    <input className="password-input"
+        type={mostrarPassword ? 'text' : 'password'}
+        placeholder="••••••••"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
+        style={{
+        display: 'block',
+        width: '100%',
+        boxSizing: 'border-box',
+        padding: '12px 42px 12px 12px',
+        border: '1px solid var(--color-border)',
+        borderRadius: 'var(--radius-button)',
+        fontSize: '16px',
+        fontFamily: 'inherit',
+        background: 'var(--color-background)',
+        color: 'var(--color-text)'
+    }}
+    />
+
+    <button className="password-toggle"
+        type="button"
+        onClick={() => setMostrarPassword(!mostrarPassword)}
+        aria-label={mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+        
+    >
+        {mostrarPassword ? (
+            <svg width="19" height="19" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" strokeWidth="1.8"
+                strokeLinecap="round" strokeLinejoin="round">
+                <path d="m3 3 18 18" />
+                <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+                <path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c6.3 0 10 7 10 7a14 14 0 0 1-4 4.7" />
+                <path d="M6.2 6.2C3.5 8 2 12 2 12s3.7 7 10 7c1 0 2-.2 2.8-.5" />
+            </svg>
+        ) : (
+            <svg width="19" height="19" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" strokeWidth="1.8"
+                strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7S2 12 2 12Z" />
+                <circle cx="12" cy="12" r="3" />
+            </svg>
+        )}
+    </button>
+</div>
 
             {/*enlace para recuperar la contraseña*/} 
             <div style={{ textAlign: 'right', marginTop: '10px' }}>
