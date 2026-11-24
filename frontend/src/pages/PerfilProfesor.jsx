@@ -216,6 +216,36 @@ if (/(.)\1{5,}/i.test(presentacion.replace(/\s/g, ''))) {
     setMensaje('La presentación contiene demasiados caracteres repetidos.')
     return
 }
+// Evitar presentaciones con texto sin sentido
+const palabrasPresentacion =
+    presentacion.match(/[a-záéíóúüñ]+/gi) || []
+
+const conectoresCortos = ['a', 'y', 'o', 'e', 'u']
+const abreviaturasPermitidas = ['sql', 'html', 'css', 'pc', 'etc']
+
+const palabrasInvalidas = palabrasPresentacion.filter(palabra => {
+    const palabraNormalizada = palabra.toLowerCase()
+
+    if (conectoresCortos.includes(palabraNormalizada)) {
+        return false
+    }
+
+    const sinVocal = !/[aeiouáéíóúü]/i.test(palabra)
+
+    const consonantesExcesivas =
+        /[bcdfghjklmnñpqrstvwxyz]{5,}/i.test(palabra)
+
+    return (
+        palabra.length === 1 ||
+        (sinVocal && !abreviaturasPermitidas.includes(palabraNormalizada)) ||
+        consonantesExcesivas
+    )
+})
+
+if (palabrasPresentacion.length < 5 || palabrasInvalidas.length > 0) {
+    setMensaje('La presentación profesional debe contener al menos 5 palabras y estar redactada con texto comprensible.')
+    return
+}
 
 // Validar experiencia laboral
 if (formulario.tieneExperiencia === null) {
