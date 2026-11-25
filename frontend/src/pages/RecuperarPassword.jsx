@@ -18,7 +18,7 @@ function RecuperarPassword({ onNavegar, setTokenRecuperacion }) {
 
     try {
       const respuesta = await fetch(
-        'http://localhost:3000/api/auth/forgot-password',
+        `${import.meta.env.VITE_API_URL}/api/auth/forgot-password`,
         {
           method: 'POST',
           headers: {
