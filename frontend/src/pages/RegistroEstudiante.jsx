@@ -54,6 +54,38 @@ useEffect(() => {
     e.preventDefault()
     setError('')
     setMensaje('')
+    // Validar nombre y apellido
+const nombre = formulario.nombre.trim()
+const apellido = formulario.apellido.trim()
+
+const validarNombre = (texto) => {
+    const valor = texto.trim()
+    const compacto = valor.replace(/[\s'-]/g, '').toLowerCase()
+
+    const datosInvalidos = [
+        'aa', 'abc', 'asdf', 'qwerty',
+        'test', 'nombre', 'apellido', 'usuario', 'admin'
+    ]
+
+    return (
+        valor.length >= 2 &&
+        valor.length <= 40 &&
+        /^[\p{L}]+(?:[ '-][\p{L}]+)*$/u.test(valor) &&
+        !datosInvalidos.includes(compacto) &&
+        !/(.)\1{2,}/i.test(compacto)
+    )
+}
+
+if (!validarNombre(nombre) || !validarNombre(apellido)) {
+    setError('El nombre y apellido no son válidos. Ingresá datos reales utilizando solamente letras.')
+    return
+}
+
+
+  if (formulario.materias.length === 0) {
+    setError('Tenés que seleccionar al menos una materia que te interese aprender.')
+    return
+}
 
   const presentacion = formulario.presentacion.trim()
 
@@ -98,6 +130,37 @@ if (!/[a-zA-ZáéíóúÁÉÍÓÚñÑ]/.test(presentacion)) {
 
 if (/(.)\1{5,}/i.test(presentacion.replace(/\s/g, ''))) {
     setError('La presentación contiene demasiados caracteres repetidos.')
+    return
+}
+// Evitar presentaciones con texto sin sentido
+const palabrasPresentacion =
+    presentacion.match(/[a-záéíóúüñ]+/gi) || []
+
+const conectoresCortos = ['a', 'y', 'o', 'e', 'u']
+const abreviaturasPermitidas = ['sql', 'html', 'css', 'pc', 'etc']
+
+const palabrasInvalidas = palabrasPresentacion.filter(palabra => {
+    const palabraNormalizada = palabra.toLowerCase()
+
+    // Permitir conectores cortos
+    if (conectoresCortos.includes(palabraNormalizada)) {
+        return false
+    }
+
+    const sinVocal = !/[aeiouáéíóúü]/i.test(palabra)
+
+    const consonantesExcesivas =
+        /[bcdfghjklmnñpqrstvwxyz]{5,}/i.test(palabra)
+
+    return (
+        palabra.length === 1 ||
+        (sinVocal && !abreviaturasPermitidas.includes(palabraNormalizada)) ||
+        consonantesExcesivas
+    )
+})
+
+if (palabrasPresentacion.length < 5 || palabrasInvalidas.length > 0) {
+    setError('La presentación debe contener al menos 5 palabras y estar redactada con texto comprensible.')
     return
 }
 

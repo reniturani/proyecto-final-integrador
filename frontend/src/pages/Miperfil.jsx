@@ -54,6 +54,163 @@ function MiPerfil({ perfilInicial, actualizarPerfil }) {
   const guardarCambios = (e) => {
     e.preventDefault()
 
+    // Validar nombre y apellido
+const nombre = formulario.nombre.trim()
+const apellido = formulario.apellido.trim()
+
+const validarNombre = (texto) => {
+    const valor = texto.trim()
+    const compacto = valor.replace(/[\s'-]/g, '').toLowerCase()
+
+    const datosInvalidos = [
+        'aa', 'abc', 'asdf', 'qwerty',
+        'test', 'nombre', 'apellido', 'usuario', 'admin'
+    ]
+
+    return (
+        valor.length >= 2 &&
+        valor.length <= 40 &&
+        /^[\p{L}]+(?:[ '-][\p{L}]+)*$/u.test(valor) &&
+        !datosInvalidos.includes(compacto) &&
+        !/(.)\1{2,}/i.test(compacto)
+    )
+}
+
+if (!validarNombre(nombre) || !validarNombre(apellido)) {
+    setMensaje('El nombre y apellido no son válidos.')
+    return
+}
+
+// Validar email
+const email = formulario.email.trim().toLowerCase()
+
+if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+    setMensaje('Ingresá un correo electrónico válido.')
+    return
+}
+
+// Proteger el correo de la cuenta de demostración
+if (
+    perfilInicial?.id_estudiante === 13 &&
+    email !== 'estudiante.prueba@profy.com'
+) {
+    setMensaje('El correo de la cuenta de demostración no se puede modificar.')
+    return
+}
+
+  // Validar presentación del estudiante
+const presentacion = formulario.presentacion.trim()
+const textoPresentacion = presentacion.toLowerCase()
+
+const expresionesProfesor = [
+    'soy profesor',
+    'soy profesora',
+    'soy docente',
+    'soy tutor',
+    'soy tutora',
+    'doy clases',
+    'dicto clases',
+    'enseño',
+    'mi metodología de enseñanza',
+    'mi experiencia docente',
+    'experiencia como profesor',
+    'experiencia como profesora',
+    'mis alumnos',
+    'mis estudiantes'
+]
+
+if (expresionesProfesor.some(expresion =>
+    textoPresentacion.includes(expresion)
+)) {
+    setMensaje('La presentación debe describir tu perfil como estudiante, tus intereses y tus objetivos de aprendizaje.')
+    return
+}
+
+if (presentacion.length < 30) {
+    setMensaje('La presentación debe tener al menos 30 caracteres.')
+    return
+}
+
+if (presentacion.length > 500) {
+    setMensaje('La presentación no puede superar los 500 caracteres.')
+    return
+}
+
+if (!/[a-zA-ZáéíóúÁÉÍÓÚñÑ]/.test(presentacion)) {
+    setMensaje('La presentación debe contener texto válido.')
+    return
+}
+
+if (/(.)\1{5,}/i.test(presentacion.replace(/\s/g, ''))) {
+    setMensaje('La presentación contiene demasiados caracteres repetidos.')
+    return
+}
+// Evitar presentaciones con texto sin sentido
+const palabrasPresentacion =
+    presentacion.match(/[a-záéíóúüñ]+/gi) || []
+
+const conectoresCortos = ['a', 'y', 'o', 'e', 'u']
+
+const abreviaturasPermitidas = ['sql', 'html', 'css', 'pc', 'etc']
+
+const palabrasInvalidas = palabrasPresentacion.filter(palabra => {
+    const palabraNormalizada = palabra.toLowerCase()
+
+    // Permitir conectores cortos
+    if (conectoresCortos.includes(palabraNormalizada)) {
+        return false
+    }
+
+    const sinVocal = !/[aeiouáéíóúü]/i.test(palabra)
+
+    const consonantesExcesivas =
+        /[bcdfghjklmnñpqrstvwxyz]{5,}/i.test(palabra)
+
+    return (
+        palabra.length === 1 ||
+        (sinVocal && !abreviaturasPermitidas.includes(palabraNormalizada)) ||
+        consonantesExcesivas
+    )
+})
+
+if (palabrasPresentacion.length < 5 || palabrasInvalidas.length > 0) {
+    setMensaje('La presentación debe contener al menos 5 palabras y estar redactada con texto comprensible.')
+    return
+}
+
+  // Validar materias seleccionadas
+
+const materiasSeleccionadas = Array.isArray(formulario.materias)
+    ? formulario.materias
+    : []
+
+    if (materiasSeleccionadas.length === 0) {
+    setMensaje('Tenés que seleccionar al menos una materia que te interese aprender.')
+    return
+}
+
+const materiasNumericas = materiasSeleccionadas.map(Number)
+
+const materiasDuplicadas =
+    new Set(materiasNumericas).size !== materiasNumericas.length
+
+const materiasInvalidas = materiasNumericas.some(id =>
+    !Number.isInteger(id) ||
+    id <= 0 ||
+    !materiasDisponibles.some(
+        materia => Number(materia.id_materia) === id
+    )
+)
+
+if (materiasDuplicadas) {
+    setMensaje('No podés seleccionar una misma materia más de una vez.')
+    return
+}
+
+if (materiasInvalidas) {
+    setMensaje('Hay materias seleccionadas que no son válidas.')
+    return
+}
     const nuevosDatos = {
         ...formulario,
         nombre: formatearNombre(formulario.nombre),

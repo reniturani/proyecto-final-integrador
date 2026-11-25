@@ -128,32 +128,236 @@ function PerfilProfesor({ perfilInicial, actualizarPerfil }) {
   };
   const guardarCambios = (e) => {
     e.preventDefault();
+    // Validar nombre y apellido
+const nombre = formulario.nombre.trim()
+const apellido = formulario.apellido.trim()
+
+const validarNombre = (texto) => {
+    const valor = texto.trim()
+    const compacto = valor.replace(/[\s'-]/g, '').toLowerCase()
+
+    const datosInvalidos = [
+        'aa',
+        'abc',
+        'asdf',
+        'qwerty',
+        'test',
+        'nombre',
+        'apellido',
+        'usuario',
+        'admin'
+    ]
+
+    return (
+        valor.length >= 2 &&
+        valor.length <= 40 &&
+        /^[\p{L}]+(?:[ '-][\p{L}]+)*$/u.test(valor) &&
+        !datosInvalidos.includes(compacto) &&
+        !/(.)\1{2,}/i.test(compacto)
+    )
+}
+
+if (!validarNombre(nombre) || !validarNombre(apellido)) {
+    setMensaje('El nombre y apellido no son válidos. Ingresá nombres reales, utilizando solamente letras.')
+    return
+}
+
+// Validar correo electrónico
+const email = formulario.email.trim().toLowerCase()
+
+if (
+    perfilInicial?.id_profesor === 13 &&
+    email !== 'profesor.prueba@profy.com'
+) {
+    setMensaje('El correo de la cuenta de demostración no se puede modificar.')
+    return
+}
+
+if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+    setMensaje('Ingresá un correo electrónico válido.')
+    return
+}
+
+// Validar presentación profesional
+const presentacion = formulario.presentacion.trim()
+const textoPresentacion = presentacion.toLowerCase()
+
+const expresionesEstudiante = [
+    'estoy estudiando',
+    'estudio',
+    'estudiar',
+    'soy estudiante',
+    'busco aprender',
+    'quiero aprender',
+    'quiero estudiar',
+    'busco reforzar',
+    'preparar mis examenes',
+    'preparar mis exámenes'
+]
+
+if (expresionesEstudiante.some(expresion =>
+    textoPresentacion.includes(expresion)
+)) {
+    setMensaje('La presentación debe describir tu perfil como profesor, tu experiencia o tu metodología de enseñanza.')
+    return
+}
+
+if (presentacion.length < 30 || presentacion.length > 500) {
+    setMensaje('La presentación debe tener entre 30 y 500 caracteres.')
+    return
+}
+
+if (!/[a-zA-ZáéíóúÁÉÍÓÚñÑ]/.test(presentacion)) {
+    setMensaje('La presentación debe contener texto válido.')
+    return
+}
+
+if (/(.)\1{5,}/i.test(presentacion.replace(/\s/g, ''))) {
+    setMensaje('La presentación contiene demasiados caracteres repetidos.')
+    return
+}
+// Evitar presentaciones con texto sin sentido
+const palabrasPresentacion =
+    presentacion.match(/[a-záéíóúüñ]+/gi) || []
+
+const conectoresCortos = ['a', 'y', 'o', 'e', 'u']
+const abreviaturasPermitidas = ['sql', 'html', 'css', 'pc', 'etc']
+
+const palabrasInvalidas = palabrasPresentacion.filter(palabra => {
+    const palabraNormalizada = palabra.toLowerCase()
+
+    if (conectoresCortos.includes(palabraNormalizada)) {
+        return false
+    }
+
+    const sinVocal = !/[aeiouáéíóúü]/i.test(palabra)
+
+    const consonantesExcesivas =
+        /[bcdfghjklmnñpqrstvwxyz]{5,}/i.test(palabra)
+
+    return (
+        palabra.length === 1 ||
+        (sinVocal && !abreviaturasPermitidas.includes(palabraNormalizada)) ||
+        consonantesExcesivas
+    )
+})
+
+if (palabrasPresentacion.length < 5 || palabrasInvalidas.length > 0) {
+    setMensaje('La presentación profesional debe contener al menos 5 palabras y estar redactada con texto comprensible.')
+    return
+}
+
+// Validar experiencia laboral
+if (formulario.tieneExperiencia === null) {
+    setMensaje('Indicá si tenés experiencia dando clases.')
+    return
+}
+
+if (formulario.tieneExperiencia === true) {
+    const detalle = formulario.detalleExperiencia.trim()
+    const palabras = detalle.split(/\s+/).filter(palabra => palabra.length > 1)
+
+    if (detalle.length < 15 || palabras.length < 3) {
+        setMensaje('Describí tu experiencia con al menos 15 caracteres y 3 palabras.')
+        return
+    }
+
+    if (!/[a-záéíóúüñ]{2,}/i.test(detalle)) {
+        setMensaje('La experiencia laboral debe contener texto válido.')
+        return
+    }
+
+    if (/(.)\1{4,}/i.test(detalle.replace(/\s/g, ''))) {
+        setMensaje('La descripción contiene demasiados caracteres repetidos.')
+        return
+    }
+
+    if (/asdf|qwerty|123456|abcdef|prueba|^a+$/i.test(detalle.replace(/\s/g, ''))) {
+        setMensaje('Ingresá una descripción válida de tu experiencia laboral.')
+        return
+    }
+}
 
     const tiposFormacion = [
-      { id: "universitario", nombre: "título universitario" },
-      { id: "terciario", nombre: "título terciario" },
-      { id: "cursos", nombre: "curso realizado" },
-    ];
+    { id: "universitario", nombre: "título universitario" },
+    { id: "terciario", nombre: "título terciario" },
+    { id: "cursos", nombre: "curso realizado" }
+];
+
+// Normalizar para detectar duplicados
+const normalizarDato = (texto) =>
+    texto.trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ')
+
+const titulosRegistrados = new Set()
+
+for (const tipo of tiposFormacion) {
+    const formacion = formulario.formacion[tipo.id]
+
+    if (!formacion.seleccionado) continue
+
+    // Validar título e institución
+    if (
+        !validarFormacion(formacion.titulo) ||
+        !validarFormacion(formacion.institucion)
+    ) {
+        setMensaje(
+            `El ${tipo.nombre} o la institución no son válidos. Ingresá datos descriptivos, con al menos 4 caracteres y sin letras repetidas.`
+        )
+        return
+    }
+
+    // Evitar títulos repetidos entre categorías
+    const titulo = normalizarDato(formacion.titulo)
+
+    if (titulosRegistrados.has(titulo)) {
+        setMensaje(
+            'No podés repetir el mismo título en distintas categorías de formación.'
+        )
+        return
+    }
+
+    titulosRegistrados.add(titulo)
+}
+
 
     for (const tipo of tiposFormacion) {
       const formacion = formulario.formacion[tipo.id];
 
-      if (formacion.seleccionado && !validarFormacion(formacion.titulo)) {
-        setMensaje(
-          `El nombre del ${tipo.nombre} no es válido. Ingresá al menos 4 caracteres y un nombre descriptivo.`,
-        );
-        return;
-      }
+      if (
+    formacion.seleccionado &&
+    (
+        !validarFormacion(formacion.titulo) ||
+        !validarFormacion(formacion.institucion)
+    )
+) {
+    setMensaje(
+        `El ${tipo.nombre} o la institución no son válidos. Ingresá datos descriptivos, con al menos 4 caracteres y sin letras repetidas.`
+    )
+    return
+}
     }
 
-    const nuevosDatos = {
-  ...perfilInicial,
-  ...formulario,
-};
+    const formatearNombre = (texto) =>
+    texto.trim().toLowerCase().replace(/\b\p{L}/gu, letra =>
+        letra.toUpperCase()
+    )
 
-setPerfil(nuevosDatos);
-actualizarPerfil(nuevosDatos);
-setEditando(false);
+    const nuevosDatos = {
+    ...perfilInicial,
+    ...formulario,
+    nombre: formatearNombre(formulario.nombre),
+    apellido: formatearNombre(formulario.apellido),
+    email: formulario.email.trim().toLowerCase()
+}
+
+setPerfil(nuevosDatos)
+setFormulario(nuevosDatos)
+actualizarPerfil(nuevosDatos)
+setEditando(false)
 setMensaje("¡Tu perfil docente se actualizó correctamente!");
 
 setTimeout(() => setMensaje(""), 3000);
@@ -254,7 +458,7 @@ setTimeout(() => setMensaje(""), 3000);
                   type="email"
                   value={formulario.email}
                   onChange={manejarCambio}
-                  disabled={!editando}
+                  disabled={!editando || perfilInicial?.id_profesor === 13 }
                   required
                 />
               </div>
