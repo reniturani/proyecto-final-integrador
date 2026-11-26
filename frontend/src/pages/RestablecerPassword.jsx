@@ -28,6 +28,37 @@ function RestablecerPassword({ onNavegar, tokenRecuperacion }) {
     setCargando(true)
 
     try {
+      // Restablecimiento local para cuentas demo (no llaman a render)
+if (token.startsWith('demo-')) { 
+    const recuperacionDemo = JSON.parse(
+        localStorage.getItem('recuperacionDemo') || 'null'
+    )
+
+    // Comprobar si el token venció
+if (!recuperacionDemo.expiraEn || Date.now() > recuperacionDemo.expiraEn) {
+    localStorage.removeItem('recuperacionDemo')
+
+    throw new Error('El código de recuperación venció. Solicitá uno nuevo.')
+}
+
+    // Guardar la nueva contraseña para esa cuenta demo
+    localStorage.setItem(
+        `passwordDemo_${recuperacionDemo.email}`,
+        nuevaPassword
+    )
+
+    // El código se utiliza una sola vez
+    localStorage.removeItem('recuperacionDemo')
+
+    setMensaje('¡Tu contraseña se actualizó correctamente! Ya podés iniciar sesión con tu nueva contraseña.')
+    setTimeout(() => {
+    onNavegar('Login')
+    }, 2500)
+    setToken('')
+    setNuevaPassword('')
+    setConfirmarPassword('')
+    return
+}
       const respuesta = await fetch(
         `${import.meta.env.VITE_API_URL}/api/auth/reset-password`,
         {
@@ -49,6 +80,10 @@ function RestablecerPassword({ onNavegar, tokenRecuperacion }) {
       }
 
       setMensaje(datos.mensaje)
+      setTimeout(() => {
+      onNavegar('Login')
+    }, 2500)
+    
       setToken('')
       setNuevaPassword('')
       setConfirmarPassword('')

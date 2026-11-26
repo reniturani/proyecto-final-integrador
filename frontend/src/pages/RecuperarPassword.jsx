@@ -17,6 +17,36 @@ function RecuperarPassword({ onNavegar, setTokenRecuperacion }) {
     setCargando(true)
 
     try {
+      // Recuperación local para cuentas de demostración
+const cuentasDemo = {
+    'estudiante.prueba@profy.com': 'estudiante',
+    'profesor.prueba@profy.com': 'profesor'
+}
+
+const emailNormalizado = email.trim().toLowerCase()
+const tipoDemo = cuentasDemo[emailNormalizado]
+
+if (tipoDemo) {
+    const tokenDemo = `demo-${tipoDemo}-${Date.now()}`
+
+    localStorage.setItem(
+        'recuperacionDemo',
+        JSON.stringify({
+            email: emailNormalizado,
+            tipo: tipoDemo,
+            token: tokenDemo,
+            expiraEn: Date.now() + 15 * 60 * 1000 // 15 minutos
+        })
+    )
+
+    setMensaje(
+        'Cuenta de demostración encontrada. Utilizá el código que aparece abajo para continuar.'
+    )
+
+    setToken(tokenDemo)
+    setTokenRecuperacion(tokenDemo)
+    return
+}
       const respuesta = await fetch(
         `${import.meta.env.VITE_API_URL}/api/auth/forgot-password`,
         {
