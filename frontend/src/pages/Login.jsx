@@ -72,12 +72,19 @@
     if (tipo !== 'administrador') {
     const usuario = usuariosDemo[tipo]
 
-    if (
-        email.trim().toLowerCase() !== usuario.email ||
-        password !== usuario.password
-    ) {
-        throw new Error('Email o contraseña incorrectos.')
-    }
+// Recuperar la contraseña actualizada, si existe. El almacenamiento local de passwords es una solucion exclusivamente para cuentas demo y no para produccion
+const passwordGuardada = localStorage.getItem(
+    `passwordDemo_${usuario.email}`
+)
+
+const passwordValida = passwordGuardada ?? usuario.password
+
+if (
+    email.trim().toLowerCase() !== usuario.email ||
+    password !== passwordValida
+) {
+    throw new Error('Email o contraseña incorrectos.')
+}
 
     localStorage.removeItem('token')
     localStorage.setItem('usuarioRol', tipo)
