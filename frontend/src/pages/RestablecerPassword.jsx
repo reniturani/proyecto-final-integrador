@@ -51,6 +51,9 @@ if (!recuperacionDemo.expiraEn || Date.now() > recuperacionDemo.expiraEn) {
     localStorage.removeItem('recuperacionDemo')
 
     setMensaje('¡Tu contraseña se actualizó correctamente! Ya podés iniciar sesión con tu nueva contraseña.')
+    setTimeout(() => {
+    onNavegar('Login')
+    }, 2500)
     setToken('')
     setNuevaPassword('')
     setConfirmarPassword('')
@@ -77,6 +80,10 @@ if (!recuperacionDemo.expiraEn || Date.now() > recuperacionDemo.expiraEn) {
       }
 
       setMensaje(datos.mensaje)
+      setTimeout(() => {
+      onNavegar('Login')
+    }, 2500)
+    
       setToken('')
       setNuevaPassword('')
       setConfirmarPassword('')
